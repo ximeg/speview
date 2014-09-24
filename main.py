@@ -6,13 +6,20 @@ import xcal_raman as xcal
 import winspec
 import PyZenity as pz
 import os
-
+import ConfigParser as cp
 
 if os.path.exists(".speview.conf"): # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
     if config.get("general", "wavenum_calibration") == "yes" :
-        print "FIXME: perform wl calibration"
+        material = config.get("wavenum_calibration", "material")
+        datafile = config.get("wavenum_calibration", "datafile")
+        darkfile = config.get("wavenum_calibration", "darkfile")
+        shift    = config.getint("wavenum_calibration", "shift")
+        cal_f, p = xcal.calibrate_spe(datafile, darkfile, material=material,
+                                      figure=pl.figure(), shift=shift)
+        pl.savefig("calibration_report-" + material + ".pdf")
+        # TODO: use pickle to save cal_f
         calibrated = True
     
 else: 
@@ -24,7 +31,7 @@ else:
         pz.InfoMessage("You selected yes")
     
 pl.plot([],[])
-
+pl.show()
 #cal_f, p = xcal.calibrate_spe("polystyrene.SPE", "dark.SPE",
 #                              material="polystyrene", figure=figure())
 #savefig("xcal-report-polystyrene.pdf")
