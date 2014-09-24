@@ -8,7 +8,7 @@ import PyZenity as pz
 import os
 import sys
 import ConfigParser as cp
-import pickle # TODO use it!
+import pickle
 
 fname = sys.argv[1]
 #fname = "Cyclohexan1.SPE"
@@ -17,15 +17,22 @@ if os.path.exists(".speview.conf"): # We have found config, lets use it!
     config.read(".speview.conf")
     calibrated = False
     if config.get("general", "wavenum_calibration") == "yes" :
-        material = config.get("wavenum_calibration", "material")
-        xcalfile = config.get("wavenum_calibration", "datafile")
-        darkfile = config.get("wavenum_calibration", "darkfile")
-        shift    = config.getint("wavenum_calibration", "shift")
-        cal_f, p = xcal.calibrate_spe(xcalfile, darkfile, material=material,
-                                      figure=pl.figure(), shift=shift)
-        pl.savefig("calibration_report-" + material + ".pdf")
-        pl.close(pl.gcf())
-        # TODO: use pickle to save cal_f
+        # check if it is necessary
+        if os.path.exists("xcal_function.pkl"):
+            # just read calibration function from it!
+            with open("xcal_function.pkl", "rb") as pklfile:
+                pickle.load(cal_f, pklfile); pklfile.close()
+        else:
+            material = config.get("wavenum_calibration", "material")
+            xcalfile = config.get("wavenum_calibration", "datafile")
+            darkfile = config.get("wavenum_calibration", "darkfile")
+            shift    = config.getint("wavenum_calibration", "shift")
+            cal_f, p = xcal.calibrate_spe(xcalfile, darkfile, material=material,
+                                          figure=pl.figure(), shift=shift)
+            pl.savefig("calibration_report-" + material + ".pdf")
+            pl.close(pl.gcf())
+            with open("xcal_function.pkl", "wb") as pklfile:
+                pickle.dump(cal_f, pklfile); pklfile.close()
         calibrated = True
     
     # We have a calibration function, lets plot the spectrum!
