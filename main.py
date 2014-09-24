@@ -9,11 +9,7 @@ import os
 import sys
 import ConfigParser as cp
 
-fname = sys.argv[1]
-#fname = "Cyclohexan1.SPE"
-if os.path.exists(".speview.conf"): # We have found config, lets use it!
-    config = cp.SafeConfigParser()
-    config.read(".speview.conf")
+def display_spe(config):
     calibrated = False
     if config.get("general", "wavenum_calibration") == "yes" :
         # check if it is necessary
@@ -33,6 +29,7 @@ if os.path.exists(".speview.conf"): # We have found config, lets use it!
         calibrated = True
     
     # Make dark current correction
+    fname = sys.argv[1]
     spec = winspec.Spectrum(fname)
     if config.get("general", "use_dark") == "yes":
         if   os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
@@ -56,14 +53,24 @@ if os.path.exists(".speview.conf"): # We have found config, lets use it!
     pl.show()
 
 
+if os.path.exists(".spevisew.conf"): # We have found config, lets use it!
+    config = cp.SafeConfigParser()
+    config.read(".speview.conf")
+    display_spe(config)
 else:
     ans = pz.Question("Should I just show the SPE file?\n" +
                      "If you answer 'No', then I will\n" +
                      "create a config with the standard\n" +
                      "settings for this folder\n")
+    config = cp.RawConfigParser()
+    config.add_section("general")
+    config.add_section("wavenum_calibration")
+    config.set("general", "wavenum_calibration", "no")
+    config.set("general", "use_dark", "no")
     if ans:
         pz.InfoMessage("You selected yes")
-    
+    else:
+        display_spe(config)    
 
 
 
