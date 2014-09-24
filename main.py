@@ -58,28 +58,28 @@ def display_spe(config):
 def quiz(config):
     """ Ask user several questions and create config for this directory """
     ans = pz.Question("Would you like to use\nwavenumber calibration?")
+    spelist = [ file for file in os.listdir(".") if
+                            file.endswith(".SPE") or file.endswith(".spe") ]
     if ans:
         config.set("general", "wavenum_calibration", "yes")
-        spelist = [ file for file in os.listdir(".") if
-                                file.endswith(".SPE") or file.endswith(".spe") ]
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
                      title="SPE file for calibration")
-            config.set("wavenum_calibration", "datafile", ans)
+            config.set("wavenum_calibration", "datafile", ans[0])
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
                      title="Corresponding dark current SPE file")
-            config.set("wavenum_calibration", "darkfile", ans)
+            config.set("wavenum_calibration", "darkfile", ans[0])
         ans = None
         materials = ["cyclohexane", "naphthalene", "paracetamol", "polystyrene"]
         while not ans:
             ans = pz.List(("Known materials",), data=[materials],
                      title="Select the material")
-            config.set("wavenum_calibration", "material", ans)
+            config.set("wavenum_calibration", "material", ans[0])
         ans = None
-        while not ans:
+        while ans is None:
             try:
                 ans = int(pz.GetText("Shift of x-axis (pixels)", entry_text="0"))
             except ValueError:
@@ -89,17 +89,23 @@ def quiz(config):
     ans = pz.Question("Would you like to use\ndark current correction?")
     if ans:
         config.set("general", "use_dark", "yes")
+        ans = None
+        while not ans:
+            ans = pz.List(("SPE files",), data=[spelist],
+                     title="Corresponding dark current SPE file")
+            config.set("general", "darkfile", ans[0])
 
-    with open(".spevisew.conf", 'wb') as configfile:
+
+    with open(".speview.conf", 'wb') as configfile:
         config.write(configfile)
-    ans = pz.Question("Would you like to see the SPE file\n?" + argv[1])
+    ans = pz.Question("Would you like to see the SPE file\n?" + sys.argv[1])
     if ans:
         display_spe(config)
 
 
 
 
-if os.path.exists(".spevisew.conf"): # We have found config, lets use it!
+if os.path.exists(".speview.conf"): # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
     display_spe(config)
@@ -113,7 +119,7 @@ else:
     config.add_section("wavenum_calibration")
     config.set("general", "wavenum_calibration", "no")
     config.set("general", "use_dark", "no")
-    if ans:
+    if not ans:
         quiz(config)
     else:
         display_spe(config)    
