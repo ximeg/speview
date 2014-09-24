@@ -11,11 +11,11 @@ import ConfigParser as cp
 import pickle # TODO use it!
 
 fname = sys.argv[1]
-print sys.argv[1]
 #fname = "Cyclohexan1.SPE"
 if os.path.exists(".speview.conf"): # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
+    calibrated = False
     if config.get("general", "wavenum_calibration") == "yes" :
         material = config.get("wavenum_calibration", "material")
         xcalfile = config.get("wavenum_calibration", "datafile")
@@ -28,7 +28,7 @@ if os.path.exists(".speview.conf"): # We have found config, lets use it!
         # TODO: use pickle to save cal_f
         calibrated = True
     
-    # We have calibration function, lets plot the spectrum!
+    # We have a calibration function, lets plot the spectrum!
     spec = winspec.Spectrum(fname)
     if   os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
         spec.background_correct(fname[:-3] + "dark.SPE")
@@ -37,11 +37,14 @@ if os.path.exists(".speview.conf"): # We have found config, lets use it!
     else:
         spec.background_correct(config.get("general", "darkfile"))
 
-    pl.plot(cal_f(spec.wavelen), spec.lum)
     if calibrated:
+        pl.plot(cal_f(spec.wavelen), spec.lum)
         pl.xlabel("Wavenumber, cm$^{-1}$")
+        pl.gca().set_xlim(cal_f(spec.wavelen.min()), cal_f(spec.wavelen.max()))
     else:
+        pl.plot(spec.wavelen, spec.lum)
         pl.xlabel("pixel number")
+        pl.gca().set_xlim(spec.wavelen.min(), spec.wavelen.max())
     pl.ylabel("Counts")
     pl.title(fname)
     pl.show()
