@@ -13,3 +13,14 @@ Proposed functionality:
  Display of file:
   use matplotlib and show image
  Add option to save file with specified size
+ 
+ 
+ 
+Features?
+---
+* Move to next/previous spectrum on -> / <- key press
+  - Hold the previous spectrum if H key was pressed (for comparison of spectra)
+  - Show info about this file if I key is pressed
+* Save calibration report and calibration function into .pdf and .dat file. The
+  last one can be loaded on next start without need for new calibration
+ 
