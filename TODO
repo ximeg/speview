@@ -23,4 +23,4 @@ Features?
   - Show info about this file if I key is pressed
 * Save calibration report and calibration function into .pdf and .dat file. The
   last one can be loaded on next start without need for new calibration
- 
+* Support for hyperspectral SPE files

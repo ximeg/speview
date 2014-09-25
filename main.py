@@ -28,7 +28,7 @@ def display_spe(config):
             pl.close(pl.gcf())
             np.savetxt("xcal_coeffs.csv", p)
         calibrated = True
-    
+
     # Make dark current correction
     fname = sys.argv[1]
     spec = winspec.Spectrum(fname)
@@ -52,8 +52,8 @@ def display_spe(config):
     pl.ylabel("Counts")
     pl.title(fname)
     pl.show()
-    
-    
+
+
 
 def quiz(config):
     """ Ask user several questions and create config for this directory """
@@ -98,12 +98,17 @@ def quiz(config):
 
     with open(".speview.conf", 'wb') as configfile:
         config.write(configfile)
-    ans = pz.Question("Would you like to see the SPE file\n?" + sys.argv[1])
+    ans = pz.Question("Would you like to see the SPE file?\n" +
+                                      os.path.basename(sys.argv[1]))
     if ans:
         display_spe(config)
 
 
 
+# First of all, we have to get the working directory, i.e. folder that
+# contains data file given as the first argument
+if sys.argv[1].find("/") >= 0:
+    os.chdir(os.path.dirname(sys.argv[1]))
 
 if os.path.exists(".speview.conf"): # We have found config, lets use it!
     config = cp.SafeConfigParser()
@@ -122,7 +127,7 @@ else:
     if not ans:
         quiz(config)
     else:
-        display_spe(config)    
+        display_spe(config)
 
 
 
