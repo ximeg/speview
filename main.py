@@ -105,9 +105,25 @@ def quiz(config):
     if ans:
         display_spe(config)
 
+def go_next():
+    """ Open next SPE file (NOT calibration or dark, see config). """
+    print "go_next(): NOT_IMPLEMENTED"
+
+def go_prev():
+    """ Open previous SPE file (NOT calibration or dark, see config). """
+    print "go_prev(): NOT_IMPLEMENTED"
+
+def hold():
+    """ Mark actual plot and do not erase it. """
+    print "hold(): NOT_IMPLEMENTED"
 
 def key_event(e):
-  print e.key
+    if e.key == "right":
+        go_next()
+    if e.key == "left":
+        go_prev()
+    if e.key == "h" or e == "H":
+        hold()
 
 
 # First of all, we have to get the working directory, i.e. folder that
