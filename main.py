@@ -51,6 +51,8 @@ def display_spe(config):
         pl.gca().set_xlim(spec.wavelen.min(), spec.wavelen.max())
     pl.ylabel("Counts")
     pl.title(fname)
+    figure = pl.gcf()
+    figure.canvas.mpl_connect("key_press_event", key_event)
     pl.show()
 
 
@@ -103,6 +105,9 @@ def quiz(config):
     if ans:
         display_spe(config)
 
+
+def key_event(e):
+  print e.key
 
 
 # First of all, we have to get the working directory, i.e. folder that
