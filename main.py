@@ -29,7 +29,11 @@ def visualize(data, calibrated=True):
     pl.ylabel("Counts")
     pl.title(fname)
     figure = pl.gcf()
-    figure.canvas.mpl_connect("key_press_event", key_event)
+    global mpl_cnc
+    if not mpl_cnc:
+        print "connecting..."
+        figure.canvas.mpl_connect("key_press_event", key_event)
+        mpl_cnc = True
     pl.show()
 
 
@@ -127,14 +131,21 @@ def quiz(config, fname):
 
 
 def go_next():
-    """ Open next SPE file (NOT calibration or dark, see config). """
-    read_spe(config, fname)
-    print "go_next(): NOT_IMPLEMENTED"
+    """ Display next SPE file. """
+    pl.cla()
+    spelist.append(spelist.pop(0))
+    print("Next file: " + spelist[0])
+    pl.title(spelist[0])
+    pl.show()
+    #read_spe(config, spelist[0])
 
 
 def go_prev():
-    """ Open previous SPE file (NOT calibration or dark, see config). """
-    print "go_prev(): NOT_IMPLEMENTED"
+    """ Display previous SPE file. """
+    pl.cla()
+    spelist.insert(0, spelist.pop(-1))
+    print("Prev file: " + spelist[0])
+    #read_spe(config, spelist[0])
 
 
 def hold():
@@ -156,6 +167,7 @@ def make_spelist(config, fname):
     Create a list of all SPE files in working directory, except those
     present in config. Also the list contains a pointer (active file)
     """
+    global spelist
     spelist = [fl for fl in os.listdir(".") if
                         fl.endswith(".SPE") or fl.endswith(".spe")]
 
@@ -168,7 +180,7 @@ def make_spelist(config, fname):
     # Rotate the circular buffer until the first element is our required file
     while not spelist[0] == fname:
         spelist.append(spelist.pop(0))
-    print spelist
+
 
 
 # Detect the working directory: it contains data file given as argv[1]
@@ -184,6 +196,7 @@ data = [()]
 # This is a circular buffer, i.e. sorted list of files with element [0]
 # being the currently displayed SPE file
 spelist = []
+mpl_cnc = False
 
 # Check if a config file is available and create it if necessary
 if os.path.exists(".speview.conf"):
