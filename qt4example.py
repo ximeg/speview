@@ -44,9 +44,10 @@ class AppForm(QMainWindow):
         self.main_frame.setLayout(vbox)
         self.setCentralWidget(self.main_frame)
 
+
     def get_data2(self):
         return np.random.normal(size=(4,5))
-        #return np.arange(20).reshape([4, 5]).copy()
+
 
     def on_draw(self):
         print("drawing!")
@@ -57,6 +58,7 @@ class AppForm(QMainWindow):
         self.axes.imshow(self.data, interpolation='nearest')
         #self.axes.plot([1,2,3])
         self.canvas.draw()
+
 
     def on_key_press(self, event):
         print('you pressed', event.key)

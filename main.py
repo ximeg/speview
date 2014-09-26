@@ -39,6 +39,9 @@ def visualize(data, calibrated=True):
 
 def read_spe(config, fname):
     """ Display SPE file based on current configuration """
+    # Create a Qt App here!    But move it to a separate function
+    app = QApplication(sys.argv)
+
     if not spelist:
         make_spelist(config, fname)
     calibrated = False
@@ -136,6 +139,7 @@ def go_next():
     spelist.append(spelist.pop(0))
     print("Next file: " + spelist[0])
     pl.title(spelist[0])
+    pl.gcf().canvas.mpl_connect("key_press_event", key_event)
     pl.show()
     #read_spe(config, spelist[0])
 
