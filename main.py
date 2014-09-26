@@ -10,7 +10,7 @@ import sys
 import ConfigParser as cp
 
 
-def display_spe(config):
+def read_spe(config, fname):
     """ Display SPE file based on current configuration """
     calibrated = False
     if config.get("general", "wavenum_calibration") == "yes":
@@ -32,7 +32,6 @@ def display_spe(config):
         calibrated = True
 
     # Make dark current correction
-    fname = sys.argv[1]
     spec = winspec.Spectrum(fname)
     if config.get("general", "use_dark") == "yes":
         if   os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
@@ -58,7 +57,7 @@ def display_spe(config):
     pl.show()
 
 
-def quiz(config):
+def quiz(config, fname):
     """ Ask user several questions and create config for this directory """
     ans = pz.Question("Would you like to use\nwavenumber calibration?")
     spelist = [file for file in os.listdir(".") if
@@ -106,7 +105,7 @@ def quiz(config):
     ans = pz.Question("Would you like to see the SPE file?\n" +
                                       os.path.basename(sys.argv[1]))
     if ans:
-        display_spe(config)
+        read_spe(config, fname)
 
 
 def go_next():
@@ -135,13 +134,16 @@ def key_event(e):
 
 # First of all, we have to get the working directory, i.e. folder that
 # contains data file given as the first argument
-if sys.argv[1].find("/") >= 0:
-    os.chdir(os.path.dirname(sys.argv[1]))
+fullname = sys.argv[1]
+if fullname.find("/") >= 0:
+    os.chdir(os.path.dirname(fullname))
+
+    fname = os.path.basename(fullname)
 
 if os.path.exists(".speview.conf"):  # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
-    display_spe(config)
+    read_spe(config, fname)
 else:
     ans = pz.Question("Should I just show the SPE file?\n" +
                      "If you answer 'No', then I will\n" +
@@ -153,9 +155,9 @@ else:
     config.set("general", "wavenum_calibration", "no")
     config.set("general", "use_dark", "no")
     if not ans:
-        quiz(config)
+        quiz(config, fname)
     else:
-        display_spe(config)
+        read_spe(config, fname)
 
 
 
