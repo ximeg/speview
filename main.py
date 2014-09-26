@@ -9,10 +9,11 @@ import os
 import sys
 import ConfigParser as cp
 
+
 def display_spe(config):
     """ Display SPE file based on current configuration """
     calibrated = False
-    if config.get("general", "wavenum_calibration") == "yes" :
+    if config.get("general", "wavenum_calibration") == "yes":
         # check if it is necessary
         if os.path.exists("xcal_coeffs.csv"):
             # just read calibration function from it!
@@ -21,8 +22,9 @@ def display_spe(config):
             material = config.get("wavenum_calibration", "material")
             xcalfile = config.get("wavenum_calibration", "datafile")
             darkfile = config.get("wavenum_calibration", "darkfile")
-            shift    = config.getint("wavenum_calibration", "shift")
-            cal_f, p = xcal.calibrate_spe(xcalfile, darkfile, material=material,
+            shift = config.getint("wavenum_calibration", "shift")
+            cal_f, p = xcal.calibrate_spe(xcalfile, darkfile,
+                                          material=material,
                                           figure=pl.figure(), shift=shift)
             pl.savefig("calibration_report-" + material + ".pdf")
             pl.close(pl.gcf())
@@ -56,12 +58,11 @@ def display_spe(config):
     pl.show()
 
 
-
 def quiz(config):
     """ Ask user several questions and create config for this directory """
     ans = pz.Question("Would you like to use\nwavenumber calibration?")
-    spelist = [ file for file in os.listdir(".") if
-                            file.endswith(".SPE") or file.endswith(".spe") ]
+    spelist = [file for file in os.listdir(".") if
+                            file.endswith(".SPE") or file.endswith(".spe")]
     if ans:
         config.set("general", "wavenum_calibration", "yes")
         ans = None
@@ -75,7 +76,10 @@ def quiz(config):
                      title="Corresponding dark current SPE file")
             config.set("wavenum_calibration", "darkfile", ans[0])
         ans = None
-        materials = ["cyclohexane", "naphthalene", "paracetamol", "polystyrene"]
+        materials = ["polystyrene",
+                     "cyclohexane",
+                     "paracetamol",
+                     "naphthalene"]
         while not ans:
             ans = pz.List(("Known materials",), data=[materials],
                      title="Select the material")
@@ -83,7 +87,7 @@ def quiz(config):
         ans = None
         while ans is None:
             try:
-                ans = int(pz.GetText("Shift of x-axis (pixels)", entry_text="0"))
+                ans = int(pz.GetText("Shift of x-axis (px)", entry_text="0"))
             except ValueError:
                 ans = None
         config.set("wavenum_calibration", "shift", ans)
@@ -97,7 +101,6 @@ def quiz(config):
                      title="Corresponding dark current SPE file")
             config.set("general", "darkfile", ans[0])
 
-
     with open(".speview.conf", 'wb') as configfile:
         config.write(configfile)
     ans = pz.Question("Would you like to see the SPE file?\n" +
@@ -105,17 +108,21 @@ def quiz(config):
     if ans:
         display_spe(config)
 
+
 def go_next():
     """ Open next SPE file (NOT calibration or dark, see config). """
     print "go_next(): NOT_IMPLEMENTED"
+
 
 def go_prev():
     """ Open previous SPE file (NOT calibration or dark, see config). """
     print "go_prev(): NOT_IMPLEMENTED"
 
+
 def hold():
     """ Mark actual plot and do not erase it. """
     print "hold(): NOT_IMPLEMENTED"
+
 
 def key_event(e):
     if e.key == "right":
@@ -131,7 +138,7 @@ def key_event(e):
 if sys.argv[1].find("/") >= 0:
     os.chdir(os.path.dirname(sys.argv[1]))
 
-if os.path.exists(".speview.conf"): # We have found config, lets use it!
+if os.path.exists(".speview.conf"):  # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
     display_spe(config)
@@ -149,6 +156,16 @@ else:
         quiz(config)
     else:
         display_spe(config)
+
+
+
+
+
+
+
+
+
+
 
 
 
