@@ -45,12 +45,15 @@ class AppForm(QMainWindow):
         self.setCentralWidget(self.main_frame)
 
     def get_data2(self):
-        return np.arange(20).reshape([4, 5]).copy()
+        return np.random.normal(size=(4,5))
+        #return np.arange(20).reshape([4, 5]).copy()
 
     def on_draw(self):
+        print("drawing!")
         self.fig.clear()
         self.axes = self.fig.add_subplot(111)
         #self.axes.plot(self.x, self.y, 'ro')
+        self.data = self.get_data2()
         self.axes.imshow(self.data, interpolation='nearest')
         #self.axes.plot([1,2,3])
         self.canvas.draw()
@@ -59,7 +62,9 @@ class AppForm(QMainWindow):
         print('you pressed', event.key)
         # implement the default mpl key press events described at
         # http://matplotlib.org/users/navigation_toolbar.html#navigation-keyboard-shortcuts
+        self.on_draw()
         key_press_handler(event, self.canvas, self.mpl_toolbar)
+
 
 
 def main():
