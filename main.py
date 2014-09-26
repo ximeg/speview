@@ -10,6 +10,25 @@ import sys
 import ConfigParser as cp
 
 
+def visualize(data, calibrated=True):
+    """ Plot the spectra contained in data (list of (x, y) arrays). """
+    for line in data:
+        x, y, fname = line
+        pl.plot(x, y)
+
+    if calibrated:
+        pl.xlabel("Wavenumber, cm$^{-1}$")
+    else:
+        pl.xlabel("pixel number")
+
+    pl.gca().set_xlim(x.min(), x.max())
+    pl.ylabel("Counts")
+    pl.title(fname)
+    figure = pl.gcf()
+    figure.canvas.mpl_connect("key_press_event", key_event)
+    pl.show()
+
+
 def read_spe(config, fname):
     """ Display SPE file based on current configuration """
     calibrated = False
@@ -41,20 +60,11 @@ def read_spe(config, fname):
         else:
             spec.background_correct(config.get("general", "darkfile"))
 
-    # Make a plot
     if calibrated:
-        pl.plot(cal_f(spec.wavelen), spec.lum)
-        pl.xlabel("Wavenumber, cm$^{-1}$")
-        pl.gca().set_xlim(cal_f(spec.wavelen.min()), cal_f(spec.wavelen.max()))
+        data[-1] = (cal_f(spec.wavelen), spec.lum, fname)
     else:
-        pl.plot(spec.wavelen, spec.lum)
-        pl.xlabel("pixel number")
-        pl.gca().set_xlim(spec.wavelen.min(), spec.wavelen.max())
-    pl.ylabel("Counts")
-    pl.title(fname)
-    figure = pl.gcf()
-    figure.canvas.mpl_connect("key_press_event", key_event)
-    pl.show()
+        data[-1] = (spec.wavelen, spec.lum, fname)
+    visualize(data, calibrated)
 
 
 def quiz(config, fname):
@@ -139,6 +149,8 @@ if fullname.find("/") >= 0:
     os.chdir(os.path.dirname(fullname))
 
     fname = os.path.basename(fullname)
+
+data = [()]
 
 if os.path.exists(".speview.conf"):  # We have found config, lets use it!
     config = cp.SafeConfigParser()
