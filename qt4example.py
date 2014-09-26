@@ -13,8 +13,8 @@ from matplotlib.backends import qt4_compat
 
 use_pyside = qt4_compat.QT_API == qt4_compat.QT_API_PYSIDE
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QApplication, QMainWindow, QWidget, QVBoxLayout
 
 
 class AppForm(QMainWindow):
