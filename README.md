@@ -52,7 +52,7 @@ create a plot and displays it with the default backend, e.g.
 I don't know exactly, what the requirements are, I have to test it.
 Basically, you have to install:
  * `pylab`
- * `xcalraman` (available on https//pypi.python.org)
+ * `xcal_raman` (available on https://pypi.python.org/pypi/xcal_raman)
 
 #### Future plans
 What I would like to implement in the future:
