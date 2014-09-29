@@ -10,9 +10,9 @@ The program should be tested on files, whose filename starts with
 The files, whose names start with "`calibration-`", can be used for wavenumber
 calibration with package `xcal_raman` (e.g. "`calibration-polystyrene.SPE`"
 together with "`calibration-dark.SPE`"). "`calibration-dark.SPE`" is used
-for dark current correction during the wavenumber calibration. You should not
-open these files directly, instead mention two of them in your configuration
-file "`.speview.conf`".
+for dark current correction during the wavenumber calibration.
+Normally you would not open these files directly, instead mention a pair of them
+in your configuration file "`.speview.conf`".
 
 The same applies for "`data-dark.SPE`", which is used for the dark current
 correction of other "`data-sample`" files. If you use background subtraction,
