@@ -1,26 +1,6 @@
-Proposed functionality:
----
- User clicks on the SPE file in a folder. What happens next:
-  - If it is the single SPE file here, just show it
-  - if not:
-    - check if the config is present here (".speview.conf")
-      yes:
-        use setting from config (dark fname, calibr fname)
-      no:
-        prompt user with questions:
-         1) just view or make config?
-         2) If make config - ask for dark, for calibration file and for cal dark
- Display of file:
-  use matplotlib and show image
- Add option to save file with specified size
- 
-
-FIX title - get rid of directory
- 
- 
 Features?
 ---
 * Move to next/previous spectrum on -> / <- key press
   - Hold the previous spectrum if H key was pressed (for comparison of spectra)
   - Show info about this file if I key is pressed
-* Support for hyperspectral SPE files
+* Support for SPE files with many spectra
