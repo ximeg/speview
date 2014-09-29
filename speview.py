@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-# simple SPE file viewer (Raman spectra)
-# license: GNU GPL
-# author:  roman.kiselew@gmail.com
-# data:    sep. 2014
 
 import pylab as pl
 import numpy as np
@@ -29,21 +25,12 @@ def visualize(data, calibrated=True):
     pl.ylabel("Counts")
     pl.title(fname)
     figure = pl.gcf()
-    global mpl_cnc
-    if not mpl_cnc:
-        print "connecting..."
-        figure.canvas.mpl_connect("key_press_event", key_event)
-        mpl_cnc = True
+    figure.canvas.mpl_connect("key_press_event", key_event)
     pl.show()
 
 
 def read_spe(config, fname):
     """ Display SPE file based on current configuration """
-    # Create a Qt App here!    But move it to a separate function
-    app = QApplication(sys.argv)
-
-    if not spelist:
-        make_spelist(config, fname)
     calibrated = False
     if config.get("general", "wavenum_calibration") == "yes":
         # check if it is necessary
@@ -90,15 +77,13 @@ def quiz(config, fname):
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="SPE file for calibration")[0]
-            config.set("wavenum_calibration", "datafile", ans)
-        spelist.remove(ans)
+                     title="SPE file for calibration")
+            config.set("wavenum_calibration", "datafile", ans[0])
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("wavenum_calibration", "darkfile", ans)
-        spelist.remove(ans)
+                     title="Corresponding dark current SPE file")
+            config.set("wavenum_calibration", "darkfile", ans[0])
         ans = None
         materials = ["polystyrene",
                      "cyclohexane",
@@ -106,8 +91,8 @@ def quiz(config, fname):
                      "naphthalene"]
         while not ans:
             ans = pz.List(("Known materials",), data=[materials],
-                     title="Select the material")[0]
-            config.set("wavenum_calibration", "material", ans)
+                     title="Select the material")
+            config.set("wavenum_calibration", "material", ans[0])
         ans = None
         while ans is None:
             try:
@@ -122,8 +107,8 @@ def quiz(config, fname):
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("general", "darkfile", ans)
+                     title="Corresponding dark current SPE file")
+            config.set("general", "darkfile", ans[0])
 
     with open(".speview.conf", 'wb') as configfile:
         config.write(configfile)
@@ -134,22 +119,13 @@ def quiz(config, fname):
 
 
 def go_next():
-    """ Display next SPE file. """
-    pl.cla()
-    spelist.append(spelist.pop(0))
-    print("Next file: " + spelist[0])
-    pl.title(spelist[0])
-    pl.gcf().canvas.mpl_connect("key_press_event", key_event)
-    pl.show()
-    #read_spe(config, spelist[0])
+    """ Open next SPE file (NOT calibration or dark, see config). """
+    print "go_next(): NOT_IMPLEMENTED"
 
 
 def go_prev():
-    """ Display previous SPE file. """
-    pl.cla()
-    spelist.insert(0, spelist.pop(-1))
-    print("Prev file: " + spelist[0])
-    #read_spe(config, spelist[0])
+    """ Open previous SPE file (NOT calibration or dark, see config). """
+    print "go_prev(): NOT_IMPLEMENTED"
 
 
 def hold():
@@ -166,44 +142,17 @@ def key_event(e):
         hold()
 
 
-def make_spelist(config, fname):
-    """
-    Create a list of all SPE files in working directory, except those
-    present in config. Also the list contains a pointer (active file)
-    """
-    global spelist
-    spelist = [fl for fl in os.listdir(".") if
-                        fl.endswith(".SPE") or fl.endswith(".spe")]
-
-    # sort list and get rid of calibration/dark files
-    spelist.sort()
-    spelist.remove(config.get("wavenum_calibration", "datafile"))
-    spelist.remove(config.get("wavenum_calibration", "darkfile"))
-    spelist.remove(config.get("general", "darkfile"))
-
-    # Rotate the circular buffer until the first element is our required file
-    while not spelist[0] == fname:
-        spelist.append(spelist.pop(0))
-
-
-
-# Detect the working directory: it contains data file given as argv[1]
+# First of all, we have to get the working directory, i.e. folder that
+# contains data file given as the first argument
 fullname = sys.argv[1]
 if fullname.find("/") >= 0:
     os.chdir(os.path.dirname(fullname))
+
     fname = os.path.basename(fullname)
 
-# Create a container for the datasets
 data = [()]
 
-# Create a container for list of SPE files in the working directory
-# This is a circular buffer, i.e. sorted list of files with element [0]
-# being the currently displayed SPE file
-spelist = []
-mpl_cnc = False
-
-# Check if a config file is available and create it if necessary
-if os.path.exists(".speview.conf"):
+if os.path.exists(".speview.conf"):  # We have found config, lets use it!
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
     read_spe(config, fname)
@@ -234,7 +183,3 @@ else:
 
 
 
-
-
-
-#
