@@ -51,12 +51,15 @@ create a plot and displays it with the default backend, e.g.
 #### Requirements
 I tested the package using virtual environment and generated a list of
 dependencies (see the "`requirenments.txt`" file)
-Basically, you require:
+Basically, you should have on your computer the following packages:
  * `pylab` for plotting (_note_: you need support for an interactive backend,
-    e.g. Qt4Agg, Gtk, wxagg, gtkagg, tkagg, etc)
- * `xcal_raman` for x-axis calibration
+    e.g. qt4agg, wxagg, gtkagg, tkagg, etc.). You can test whether you have a
+    suitable backend by running the following line of code in your python
+    interpeter: `import pylab as p; p.gca(); p.show()`.
+    If a window with empty axes will pop up, then everything is correct!
+ * `xcal_raman` for x-axis calibration and reading of SPE files
     (available on https://pypi.python.org/pypi/xcal_raman)
- * `pyZenity` for interaction with user
+ * `pyZenity` for graphical interaction with user
 
 ##### Automatic installation of dependencies
 Run `pip install -r requirenments.txt` to automatically install the
@@ -68,7 +71,8 @@ fail to get it from there due to the security reasons. You have to explicitly
 allow `pip` to download it from the external resource with the following
 command:
 ```
-pip install pyzenity --allow-external PyZenity --allow-unverified pyzenity
+pip install pyzenity --allow-external   pyzenity \
+                     --allow-unverified pyzenity
 ```
 
 #### Future plans
