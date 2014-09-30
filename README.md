@@ -84,9 +84,9 @@ Problem happens because for some reason the post-installation script
 python bin/pyside_postinstall.py -install
 ```
 
-#### Requirements
+#### Description of requirements
 I tested the package using virtual environment and generated a list of
-dependencies (see the "`requirenments.txt`" file)
+dependencies with the "`pip freeze`" command.
 Basically, you should have on your computer the following packages:
  * `pylab` for plotting (_note_: you need support for an interactive backend,
     e.g. qt4agg, wxagg, gtkagg, tkagg, etc.). You can test whether you have a
@@ -97,9 +97,6 @@ Basically, you should have on your computer the following packages:
     (available on https://pypi.python.org/pypi/xcal_raman)
  * `pyZenity` for graphical interaction with user
 
-##### Automatic installation of dependencies
-Run `pip install -r requirenments.txt` to automatically install the
-dependencies.
 
 #### Future plans
 What I would like to implement in the future:
