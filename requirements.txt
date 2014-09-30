@@ -1,6 +1,9 @@
 --index-url https://pypi.python.org/simple/
 
+# Unfortunately PyZenity is not on PyPi and can be specified only here
 --allow-external PyZenity
---allow-unverified pyzenity
+--allow-unverified PyZenity
+PyZenity
 
 -e .
+

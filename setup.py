@@ -23,8 +23,7 @@ setup(
         "PySide>=1.2.2",
         "matplotlib>=1.4.0",
         "scipy>=0.14.0",
-        "numpy>=1.9.0",
-        "PyZenity>=0.1.4"
+        "numpy>=1.9.0"
         ]
 )
 
