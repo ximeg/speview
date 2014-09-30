@@ -48,12 +48,55 @@ After the data are processed, speview calls matplotlib to
 create a plot and displays it with the default backend, e.g.
 `qt4agg`. A window with a plot will pop up.
 
-#### Requirements
-I don't know exactly, what the requirements are, I have to test it.
-Basically, you have to install:
- * `pylab` for plotting
- * `xcal_raman` for x-axis calibration (available on https://pypi.python.org/pypi/xcal_raman)
- * `pyZenity` for interaction with user
+### Installation
+You should be able to install the package with the following two commands:
+```
+pip install pyzenity --allow-unverified pyzenity
+pip install <this-package>.tar.gz
+```
+PyZenity is not stored on _PyPi_ and therefore is considered by `pip` as
+potentially dangerous package. For this reason you have to install it manually
+with a separate command.
+
+#### Troubleshooting
+Please note, that you may encounter two troubles:
+ 1. The matplotlib uses a non-interactive backend (no window appears)
+ 2. Pylab has some problems with shared libraries of PySide:
+
+>  ImportError: libpyside-python2.7.so.1.2: cannot open
+>  shared object file: No such file or directory
+
+##### Selecting default backend for matplotlib
+You can select your default backend, e.g. _qt4agg_, in `matplotlibrc` file.
+The location of this file can be determined from `python`:
+```
+import matplotlib as m
+m.get_configdir()
+```
+Usually it is something like "`.config/matplotlib/`", and placing a file named
+"`matplotlibrc`" there should work just fine. More info could be found at
+http://matplotlib.org/users/customizing.html
+
+##### Fixing Pylab
+Problem happens because for some reason the post-installation script
+"`pyside_postinstall.py`" did not run. Fix it by executing:
+```
+python bin/pyside_postinstall.py -install
+```
+
+#### Description of requirements
+I tested the package using virtual environment and generated a list of
+dependencies with the "`pip freeze`" command.
+Basically, you should have on your computer the following packages:
+ * `pylab` for plotting (_note_: you need support for an interactive backend,
+    e.g. qt4agg, wxagg, gtkagg, tkagg, etc.). You can test whether you have a
+    suitable backend by running the following line of code in your python
+    interpeter: `import pylab as p; p.gca(); p.show()`.
+    If a window with empty axes will pop up, then everything is correct!
+ * `xcal_raman` for x-axis calibration and reading of SPE files
+    (available on https://pypi.python.org/pypi/xcal_raman)
+ * `pyZenity` for graphical interaction with user
+
 
 #### Future plans
 What I would like to implement in the future:
