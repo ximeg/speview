@@ -65,16 +65,6 @@ Basically, you should have on your computer the following packages:
 Run `pip install -r requirenments.txt` to automatically install the
 dependencies.
 
-###### Manual installation of PyZenity
-Since PyZenity is not available for download directly from _pypi_, `pip` would
-fail to get it from there due to the security reasons. You have to explicitly
-allow `pip` to download it from the external resource with the following
-command:
-```
-pip install pyzenity --allow-external   pyzenity \
-                     --allow-unverified pyzenity
-```
-
 #### Future plans
 What I would like to implement in the future:
  * Support for keystokes, e.g. user presses -> or <- and speview

@@ -18,10 +18,9 @@ PySide>=1.2.2
 #numpy>=1.9.0
 
 # PyZenity is for asking questions to user
-# NOTE: pip -r <this_file> would fail (see README.md), you have to run
-#    pip install pyzenity --allow-external PyZenity --allow-unverified pyzenity
 PyZenity>=0.1.4
-
+--allow-external PyZenity
+--allow-unverified pyzenity
 
 
 
