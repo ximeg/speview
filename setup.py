@@ -1,4 +1,8 @@
-from distutils.core import setup
+from setuptools import setup
+
+with open('requirements.txt') as f:
+    lines = [x.strip() for x in f.read().splitlines()]
+    reqs = [x for x in lines if not (x.startswith("#") or len(x) == 0)]
 
 setup(
     name='speview',
@@ -10,9 +14,6 @@ setup(
     license='LICENSE.txt',
     description='Program to display binary SPE files with Raman spectra',
     long_description=open('README.md').read(),
-    install_requires=[
-        "xcal_raman >= 0.1.5",
-        "matplotlib",
-    ],
+    install_requires=reqs
 )
 
