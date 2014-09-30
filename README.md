@@ -49,11 +49,27 @@ create a plot and displays it with the default backend, e.g.
 `qt4agg`. A window with a plot will pop up.
 
 #### Requirements
-I don't know exactly, what the requirements are, I have to test it.
-Basically, you have to install:
- * `pylab` for plotting
- * `xcal_raman` for x-axis calibration (available on https://pypi.python.org/pypi/xcal_raman)
+I tested the package using virtual environment and generated a list of
+dependencies (see the "`requirenments.txt`" file)
+Basically, you require:
+ * `pylab` for plotting (_note_: you need support for an interactive backend,
+    e.g. Qt4Agg, Gtk, wxagg, gtkagg, tkagg, etc)
+ * `xcal_raman` for x-axis calibration
+    (available on https://pypi.python.org/pypi/xcal_raman)
  * `pyZenity` for interaction with user
+
+##### Automatic installation of dependencies
+Run `pip install -r requirenments.txt` to automatically install the
+dependencies.
+
+###### Manual installation of PyZenity
+Since PyZenity is not available for download directly from _pypi_, `pip` would
+fail to get it from there due to the security reasons. You have to explicitly
+allow `pip` to download it from the external resource with the following
+command:
+```
+pip install pyzenity --allow-external PyZenity --allow-unverified pyzenity
+```
 
 #### Future plans
 What I would like to implement in the future:

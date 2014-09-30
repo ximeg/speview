@@ -1,12 +1,27 @@
-PyZenity>=0.1.4
 argparse>=1.2.1
-matplotlib>=1.4.0
 mock>=1.0.1
 nose>=1.3.4
-numpy>=1.9.0
 pyparsing>=2.0.2
 python-dateutil>=2.2
-scipy>=0.14.0
 six>=1.8.0
 wsgiref>=0.1.2
 xcal-raman>=0.1.5
+
+# PySide is required for qt4agg mpl backend to work. The packages
+# libqt4-core libqt4-dev libqt4-gui qt4-dev-tools qmake cmake
+# must be present on your system if you compile PySide
+# Feel free to use other backend if you want
+PySide>=1.2.2
+
+#matplotlib>=1.4.0
+#scipy>=0.14.0
+#numpy>=1.9.0
+
+# PyZenity is for asking questions to user
+# NOTE: pip -r <this_file> would fail (see README.md), you have to run
+#    pip install pyzenity --allow-external PyZenity --allow-unverified pyzenity
+PyZenity>=0.1.4
+
+
+
+
