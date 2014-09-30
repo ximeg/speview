@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='speview',
-    version='0.1.0',
+    version='0.1.2',
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
     scripts=['speview.py'],
