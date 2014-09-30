@@ -1,8 +1,5 @@
 from setuptools import setup
 
-with open('requirements.txt') as f:
-    lines = [x.strip() for x in f.read().splitlines()]
-    reqs = [x for x in lines if not (x.startswith("#") or len(x) == 0)]
 
 setup(
     name='speview',
@@ -14,6 +11,20 @@ setup(
     license='LICENSE.txt',
     description='Program to display binary SPE files with Raman spectra',
     long_description=open('README.md').read(),
-    install_requires=reqs
+    install_requires=[
+        "argparse>=1.2.1",
+        "mock>=1.0.1",
+        "nose>=1.3.4",
+        "pyparsing>=2.0.2",
+        "python-dateutil>=2.2",
+        "six>=1.8.0",
+        "wsgiref>=0.1.2",
+        "xcal-raman>=0.1.5",
+        "PySide>=1.2.2",
+        "matplotlib>=1.4.0",
+        "scipy>=0.14.0",
+        "numpy>=1.9.0",
+        "PyZenity>=0.1.4"
+        ]
 )
 

@@ -1,0 +1,3 @@
+include LICENSE.txt README.md
+recursive-include testdata *.SPE
+prune examples/sample?/build
