@@ -1,3 +1,6 @@
 --index-url https://pypi.python.org/simple/
 
+--allow-external PyZenity
+--allow-unverified pyzenity
+
 -e .
