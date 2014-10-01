@@ -52,7 +52,7 @@ create a plot and displays it with the default backend, e.g.
 You should be able to install the package with the following two commands:
 ```
 pip install pyzenity --allow-unverified pyzenity
-pip install <this-package>.tar.gz
+pip install speview
 ```
 PyZenity is not stored on _PyPi_ and therefore is considered by `pip` as
 potentially dangerous package. For this reason you have to install it manually
@@ -76,6 +76,10 @@ m.get_configdir()
 Usually it is something like "`.config/matplotlib/`", and placing a file named
 "`matplotlibrc`" there should work just fine. More info could be found at
 http://matplotlib.org/users/customizing.html
+
+You may wish to use a `qt4agg` backend, which requires `PySide`. If you install
+`PySide` with `pip`, make sure that you have tools `cmake` and `qmake`. The last
+one is typically found in something like `libqt4-dev`.
 
 ##### Fixing Pylab
 Problem happens because for some reason the post-installation script
