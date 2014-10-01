@@ -15,12 +15,17 @@ import sys
 import ConfigParser as cp
 
 fig = None
+show_called = False
 
 def visualize(data, calibrated=True):
     """ Plot the spectra contained in data (list of (x, y) arrays). """
     for line in data:
         x, y, fname = line
-        pl.plot(x, y)
+        if len(fname) > 24:
+            lbl = "%s~%s" % (fname[:10], fname[-14:-4])
+        else:
+            lbl = fname[:-4]
+        pl.plot(x, y, label=lbl)
 
     if calibrated:
         pl.xlabel("Wavenumber, cm$^{-1}$")
@@ -30,7 +35,11 @@ def visualize(data, calibrated=True):
     pl.gca().set_xlim(x.min(), x.max())
     pl.ylabel("Counts")
     pl.title(fname)
-    pl.show()
+    pl.legend(loc="upper right", fontsize="small")
+    global show_called
+    if not show_called:
+        show_called = True
+        pl.show()
 
 
 def read_spe(config, fname):
@@ -134,34 +143,28 @@ def quiz(config, fname):
 
 def go_next():
     """ Open next SPE file (NOT calibration or dark, see config). """
-    pl.plot(np.random.normal(size=100), np.random.normal(size=100), "+")
-    pl.gca().set_ylim(-1,1)
-    pl.gca().set_xlim(-1,1)
-    canvas.draw()
-#    print "go_next(): NOT_IMPLEMENTED - in process"
-#=======
-#    """ Display next SPE file. """
-#    pl.cla()
+
     spelist.append(spelist.pop(0))
     print("Next file: " + spelist[0])
-#    pl.title(spelist[0])
-#    pl.gcf().canvas.mpl_connect("key_press_event", key_event)
-#    pl.show()
-#    #read_spe(config, spelist[0])
-#>>>>>>> development
+    print spelist
+    read_spe(config, spelist[0])
+    canvas.draw()
 
 
 def go_prev():
     """ Display previous SPE file. """
-    pl.cla()
     spelist.insert(0, spelist.pop(-1))
     print("Prev file: " + spelist[0])
-    #read_spe(config, spelist[0])
+    print spelist
+    read_spe(config, spelist[0])
+    canvas.draw()
+
 
 
 def hold():
     """ Mark actual plot and do not erase it. """
     print "hold(): NOT_IMPLEMENTED"
+    print data
 
 
 def key_event(e):
