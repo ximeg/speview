@@ -150,8 +150,6 @@ def go_next():
     """ Open next SPE file (NOT calibration or dark, see config). """
     pl.cla()
     spelist.append(spelist.pop(0))
-    print("Next file: " + spelist[0])
-    print spelist
     read_spe(config, spelist[0])
     canvas.draw()
 
@@ -160,8 +158,6 @@ def go_prev():
     """ Display previous SPE file. """
     pl.cla()
     spelist.insert(0, spelist.pop(-1))
-    print("Prev file: " + spelist[0])
-    print spelist
     read_spe(config, spelist[0])
     canvas.draw()
 
@@ -170,7 +166,6 @@ def go_prev():
 def hold():
     """ Mark actual plot and do not erase it. """
     print "hold(): NOT_IMPLEMENTED"
-    print data
 
 
 def key_event(e):
