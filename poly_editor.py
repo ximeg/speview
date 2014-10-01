@@ -12,13 +12,8 @@ class Interactor():
         self.canvas = plt.gcf().canvas
         self.ax = plt.gca()
 
-        self.canvas.mpl_connect('draw_event', self.draw_callback)
         self.canvas.mpl_connect('button_press_event', self.button_press_callback)
         self.canvas.mpl_connect('key_press_event', self.key_press_callback)
-
-    def draw_callback(self, event):
-        self.background = self.canvas.copy_from_bbox(self.ax.bbox)
-        self.canvas.blit(self.ax.bbox)
 
     def button_press_callback(self, event):
         'whenever a mouse button is pressed'
@@ -31,7 +26,6 @@ class Interactor():
 
     def key_press_callback(self, event):
         'whenever a key is pressed'
-#        if not event.inaxes: return
         plt.plot(np.random.normal(size=10), np.random.normal(size=10), ".")
         if event.key=='t':
             print "Key is 't'"
@@ -40,8 +34,6 @@ class Interactor():
         elif event.key=='i':
             print "Key is 'i'"
         self.canvas.draw()
-
-
 
 p = Interactor()
 plt.show()
