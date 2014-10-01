@@ -5,6 +5,10 @@
 # author:  roman.kiselew@gmail.com
 # date:    Sep.-Oct. 2014
 
+# Force MPL to save figures in the current working directory
+import matplotlib as m
+m.rcParams["savefig.directory"] = None
+
 import pylab as pl
 import numpy as np
 import xcal_raman as xcal
