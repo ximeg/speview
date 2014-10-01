@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # simple SPE file viewer (Raman spectra)
 # license: GNU GPL
 # author:  roman.kiselew@gmail.com
-# data:    sep. 2014
+# date:    Sep.-Oct. 2014
 
 import pylab as pl
 import numpy as np
@@ -137,12 +138,12 @@ def go_next():
     pl.gca().set_ylim(-1,1)
     pl.gca().set_xlim(-1,1)
     canvas.draw()
-    print "go_next(): NOT_IMPLEMENTED - in process"
+#    print "go_next(): NOT_IMPLEMENTED - in process"
 #=======
 #    """ Display next SPE file. """
 #    pl.cla()
-#    spelist.append(spelist.pop(0))
-#    print("Next file: " + spelist[0])
+    spelist.append(spelist.pop(0))
+    print("Next file: " + spelist[0])
 #    pl.title(spelist[0])
 #    pl.gcf().canvas.mpl_connect("key_press_event", key_event)
 #    pl.show()
