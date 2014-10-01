@@ -9,6 +9,7 @@ import os
 import sys
 import ConfigParser as cp
 
+fig = None
 
 def visualize(data, calibrated=True):
     """ Plot the spectra contained in data (list of (x, y) arrays). """
@@ -24,13 +25,17 @@ def visualize(data, calibrated=True):
     pl.gca().set_xlim(x.min(), x.max())
     pl.ylabel("Counts")
     pl.title(fname)
-    figure = pl.gcf()
-    figure.canvas.mpl_connect("key_press_event", key_event)
     pl.show()
 
 
 def read_spe(config, fname):
     """ Display SPE file based on current configuration """
+    global fig
+    global canvas
+    if not fig:
+        fig = pl.figure()
+        canvas = fig.canvas
+        canvas.mpl_connect("key_press_event", key_event)
     calibrated = False
     if config.get("general", "wavenum_calibration") == "yes":
         # check if it is necessary
@@ -120,7 +125,11 @@ def quiz(config, fname):
 
 def go_next():
     """ Open next SPE file (NOT calibration or dark, see config). """
-    print "go_next(): NOT_IMPLEMENTED"
+    pl.plot(np.random.normal(size=100), np.random.normal(size=100), "+")
+    pl.gca().set_ylim(-1,1)
+    pl.gca().set_xlim(-1,1)
+    canvas.draw()
+    print "go_next(): NOT_IMPLEMENTED - in process"
 
 
 def go_prev():
