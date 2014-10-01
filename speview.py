@@ -145,10 +145,9 @@ def key_event(e):
 # First of all, we have to get the working directory, i.e. folder that
 # contains data file given as the first argument
 fullname = sys.argv[1]
+fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
     os.chdir(os.path.dirname(fullname))
-
-    fname = os.path.basename(fullname)
 
 data = [()]
 
