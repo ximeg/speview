@@ -143,7 +143,7 @@ def quiz(config, fname):
 
 def go_next():
     """ Open next SPE file (NOT calibration or dark, see config). """
-
+    pl.cla()
     spelist.append(spelist.pop(0))
     print("Next file: " + spelist[0])
     print spelist
@@ -153,6 +153,7 @@ def go_next():
 
 def go_prev():
     """ Display previous SPE file. """
+    pl.cla()
     spelist.insert(0, spelist.pop(-1))
     print("Prev file: " + spelist[0])
     print spelist
