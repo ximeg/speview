@@ -4,7 +4,6 @@ matplotlib event handling to interact with objects on the canvas
 
 """
 import numpy as np
-import pylab as pl
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 from matplotlib.mlab import dist_point_to_segment
@@ -31,7 +30,7 @@ class PolygonInteractor:
 
     def __init__(self, ax):
         self.ax = ax
-        canvas = pl.gcf().canvas
+        canvas = plt.gcf().canvas
 
 
         canvas.mpl_connect('draw_event', self.draw_callback)
@@ -55,9 +54,11 @@ class PolygonInteractor:
 
     def button_press_callback(self, event):
         'whenever a mouse button is pressed'
+        plt.plot(np.random.normal(size=100), np.random.normal(size=100), "+")
         if event.inaxes==None: return
         if event.button != 1: return
         self._ind = self.get_ind_under_point(event)
+        self.canvas.draw()
 
     def button_release_callback(self, event):
         'whenever a mouse button is released'
@@ -67,7 +68,7 @@ class PolygonInteractor:
     def key_press_callback(self, event):
         'whenever a key is pressed'
         if not event.inaxes: return
-        pl.plot(np.random.normal(size=10), np.random.normal(size=10), ".")
+        plt.plot(np.random.normal(size=10), np.random.normal(size=10), ".")
         if event.key=='t':
             print "Key is 't'"
         elif event.key=='d':
