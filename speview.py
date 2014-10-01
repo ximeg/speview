@@ -85,6 +85,7 @@ def read_spe(config, fname):
         else:
             spec.background_correct(config.get("general", "darkfile"))
 
+    canvas.set_window_title(fname[:-4])
     if calibrated:
         data[-1] = (cal_f(spec.wavelen), spec.lum, fname)
     else:
