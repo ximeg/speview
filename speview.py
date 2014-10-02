@@ -21,25 +21,41 @@ import ConfigParser as cp
 fig = None
 show_called = False
 
+
 def visualize(data, calibrated=True):
     """ Plot the spectra contained in data (list of (x, y) arrays). """
     for line in data:
         x, y, fname = line
-        if len(fname) > 24:
-            lbl = "%s~%s" % (fname[:10], fname[-14:-4])
+        # Crop the middle of a very long filename and use the result in legend
+        if len(fname) > 28:
+            lbl = "%s~%s" % (fname[:12], fname[-16:-4])
         else:
             lbl = fname[:-4]
         pl.plot(x, y, label=lbl)
 
+    # Formatting - zero level, limits of axes
+    pl.gca().set_xlim(x.min(), x.max())
+    pl.margins(0.0, 0.05)  # 5% vertical margins
+    pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=0.75, alpha=0.5)
+
+    # Formatting - labels and title
+    pl.ylabel("Counts")
+    pl.title(fname)
     if calibrated:
         pl.xlabel("Wavenumber, cm$^{-1}$")
     else:
         pl.xlabel("pixel number")
 
-    pl.gca().set_xlim(x.min(), x.max())
-    pl.ylabel("Counts")
-    pl.title(fname)
-    pl.legend(loc="upper right", fontsize="small")
+    # Formatting - legend
+    legend = pl.legend(loc="upper right", fontsize="small", fancybox=True,
+                       frameon=True, framealpha=0.6)
+    legend.draggable(True)
+    if len(legend.get_texts()) > 1:
+        legend.set_title("Opened files")
+    else:
+        legend.set_title("Opened file")
+
+    # Call function 'show()' if it was not done before
     global show_called
     if not show_called:
         show_called = True
