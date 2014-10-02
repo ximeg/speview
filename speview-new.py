@@ -66,8 +66,8 @@ class DataSet():
     def replace(self, item):
         self.data[-1] = item
 
-    def remove(self):
-        del self.data[-1]
+    def remove(self, index):
+        del self.data[index]
 
 
 
@@ -101,6 +101,8 @@ class Window():
             self.go_prev()
         if e.key == "a" or e == "A":
             self.add()
+        if e.key == "d" or e == "D":
+            self.delete()
 
 
 
@@ -160,12 +162,16 @@ class Window():
         considered to be the previous one.
         """
         self.dataset.hold()
-        #if len(self.dataset.data) == 1:
-         #   self.dataset.add(self.dataset.data[0])
-        #else:
-         #   if not self.dataset.data[0] == self.dataset.data[1]:
-          #      self.dataset.add(self.dataset.data[0])
 
+    def delete(self):
+        """
+        Delete the current spectrum from the datastack.
+        """
+        # First of all we make sure, that it is already stored somewhere
+        # in the dataset AND it is not the last element
+        for i, item in enumerate(self.dataset.data[:-1]):
+            if item[2] == self.spelist[0]:
+                self.dataset.remove(i)
 
 ###############################################################################
 
