@@ -144,6 +144,7 @@ class Window():
 
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
+        print "check 'from itertools import cycle' and http://stackoverflow.com/questions/7799156/can-i-cycle-through-line-styles-in-matplotlib"
         self.ax.cla()
         self.spelist.append(self.spelist.pop(0))  # rotate circle forward
         self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
