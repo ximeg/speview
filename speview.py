@@ -22,154 +22,6 @@ fig = None
 show_called = False
 
 
-
-
-
-
-
-###############################################################################
-class FileReader():
-    def __init__(self, config):
-        # Figure out if we need to perform calibration
-        self.calibrated = False
-        if self.calibrated:
-            xcal_coeffs = np.loadtxt("xcal_coeffs.csv")
-        else:
-            xcal_coeffs = [1, 0]  # - uncalibrated
-        self.cal_f = lambda x: np.polyval(xcal_coeffs, x)
-
-    def read_spe(self, fname):
-        spec = winspec.Spectrum(fname)
-        if config.get("general", "use_dark") == "yes":
-            if   os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
-                spec.background_correct(fname[:-3] + "dark.SPE")
-            elif os.path.exists(fname[:-3] + "dark.spe"):
-                spec.background_correct(fname[:-3] + "dark.spe")
-            else:
-                spec.background_correct(config.get("general", "darkfile"))
-
-        return (self.cal_f(spec.wavelen), spec.lum, fname)
-
-
-class DataSet():
-    def __init__(self):
-        self.data = [()]
-
-    def add(self, item):
-        self.data.append(item)
-
-    def replace(self, item):
-        self.data[-1] = item
-
-    def remove(self):
-        del self.data[-1]
-
-
-def read_spe(fname):
-    x, y = 0, 0
-    return (x, y, fname)
-
-
-class Window():
-    def __init__(self, config, fname):
-        self.spelist = make_spelist(config, fname)
-
-        # Create a data container
-        self.dataset = DataSet()
-
-        # Read spectrum and place first data into the container
-        dataReader = FileReader(config)
-        self.dataset.replace(dataReader.read_spe(self.spelist[0]))
-        print self.dataset.data
-
-
-        # Create a figure and show it (start the event loop)
-        self.figure = pl.figure()
-        self.ax = self.figure.gca()
-        self.canvas = self.figure.canvas
-        self.canvas.mpl_connect("key_press_event", self.key_event)
-        self.draw()
-        pl.show()
-
-
-
-    def key_event(self, e):
-        print "pressed"
-        pass
-
-
-    def draw(self):
-        # draw our self.dataset.data
-        for line in self.dataset.data:
-            x, y, fname = line
-            # Crop the middle of a very long filename and use the result in legend
-            if len(fname) > 28:
-                lbl = "%s~%s" % (fname[:12], fname[-16:-4])
-            else:
-                lbl = fname[:-4]
-            pl.plot(x, y, label=lbl)
-        # change figure title and plot params
-        self.figure.set_window_title(self.spelist[0])
-        # Formatting - zero level, limits of axes
-        self.ax.set_xlim(x.min(), x.max())
-        pl.margins(0.0, 0.05)  # 5% vertical margins
-        pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=0.75, alpha=0.5)
-
-        # Formatting - labels and title
-        pl.ylabel("Counts")
-        pl.title(fname)
-        if calibrated:
-            pl.xlabel("Wavenumber, cm$^{-1}$")
-        else:
-            pl.xlabel("pixel number")
-
-        # Formatting - legend
-        legend = pl.legend(loc="upper right", fontsize="small", fancybox=True,
-                           frameon=True, framealpha=0.6)
-        legend.draggable(True)
-        if len(legend.get_texts()) > 1:
-            legend.set_title("Opened files")
-        else:
-            legend.set_title("Opened file")
-
-        self.canvas.draw()
-
-    def go_next():
-        """ Open next SPE file (NOT calibration or dark, see config). """
-        self.ax.cla()
-        self.spelist.append(self.spelist.pop(0))
-        read_spe(spelist[0])
-        self.draw()
-
-
-###############################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def visualize(data, calibrated=True):
     """ Plot the spectra contained in data (list of (x, y) arrays). """
     for line in data:
@@ -202,6 +54,12 @@ def visualize(data, calibrated=True):
         legend.set_title("Opened files")
     else:
         legend.set_title("Opened file")
+
+    # Call function 'show()' if it was not done before
+    global show_called
+    if not show_called:
+        show_called = True
+        pl.show()
 
 
 def read_spe(config, fname):
@@ -356,7 +214,7 @@ def make_spelist(config, fname):
     # Rotate the circular buffer until the first element is our required file
     while not spelist[0] == fname:
         spelist.append(spelist.pop(0))
-    return spelist
+
 
 
 # Detect the working directory: it contains data file given as argv[1]
@@ -378,8 +236,7 @@ mpl_cnc = False
 if os.path.exists(".speview.conf"):
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
-#    read_spe(config, fname)
-    w = Window(config, fname)
+    read_spe(config, fname)
 else:
     ans = pz.Question("Should I just show the SPE file?\n" +
                      "If you answer 'No', then I will\n" +
