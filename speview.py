@@ -188,9 +188,12 @@ def make_spelist(config, fname):
 
     # sort list and get rid of calibration/dark files
     spelist.sort()
-    spelist.remove(config.get("wavenum_calibration", "datafile"))
-    spelist.remove(config.get("wavenum_calibration", "darkfile"))
-    spelist.remove(config.get("general", "darkfile"))
+    try: spelist.remove(config.get("wavenum_calibration", "datafile"))
+    except cp.NoOptionError: pass
+    try: spelist.remove(config.get("wavenum_calibration", "darkfile"))
+    except cp.NoOptionError: pass
+    try: spelist.remove(config.get("general", "darkfile"))
+    except cp.NoOptionError: pass
 
     # Rotate the circular buffer until the first element is our required file
     while not spelist[0] == fname:
