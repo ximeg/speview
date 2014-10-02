@@ -58,6 +58,11 @@ class DataSet():
     def add(self, item):
         self.data.append(item)
 
+    def hold(self):
+        """ Append an empty item, (changed by next call to replace)"""
+        if not self.data[-1] == ([], [], ""):
+            self.data.append(([], [], ""))
+
     def replace(self, item):
         self.data[-1] = item
 
@@ -94,8 +99,9 @@ class Window():
             self.go_next()
         if e.key == "left":
             self.go_prev()
-#        if e.key == "h" or e == "H":
-#            self.hold()
+        if e.key == "a" or e == "A":
+            self.add()
+
 
 
     def draw(self):
@@ -134,22 +140,31 @@ class Window():
 
         self.canvas.draw()
 
-
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
         self.ax.cla()
-        self.spelist.append(self.spelist.pop(0))
-        self.dataset.replace( self.dataReader.read_spe(self.spelist[0]))
+        self.spelist.append(self.spelist.pop(0))  # rotate circle forward
+        self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
         self.draw()
-
 
     def go_prev(self):
         """ Display previous SPE file. """
         self.ax.cla()
-        self.spelist.insert(0, self.spelist.pop(-1))
+        self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
         self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
         self.draw()
 
+    def add(self):
+        """
+        Move the current datafile back in the datastack, so it is
+        considered to be the previous one.
+        """
+        self.dataset.hold()
+        #if len(self.dataset.data) == 1:
+         #   self.dataset.add(self.dataset.data[0])
+        #else:
+         #   if not self.dataset.data[0] == self.dataset.data[1]:
+          #      self.dataset.add(self.dataset.data[0])
 
 
 ###############################################################################
