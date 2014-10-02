@@ -21,6 +21,7 @@ import ConfigParser as cp
 fig = None
 show_called = False
 
+
 def visualize(data, calibrated=True):
     """ Plot the spectra contained in data (list of (x, y) arrays). """
     for line in data:
@@ -37,6 +38,8 @@ def visualize(data, calibrated=True):
         pl.xlabel("pixel number")
 
     pl.gca().set_xlim(x.min(), x.max())
+    pl.margins(0.0, 0.05)  # 5% vertical margins
+    pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=0.75, alpha=0.5)
     pl.ylabel("Counts")
     pl.title(fname)
     pl.legend(loc="upper right", fontsize="small")
