@@ -50,6 +50,10 @@ def visualize(data, calibrated=True):
     legend = pl.legend(loc="upper right", fontsize="small", fancybox=True,
                        frameon=True, framealpha=0.6)
     legend.draggable(True)
+    if len(legend.get_texts()) > 1:
+        legend.set_title("Opened files")
+    else:
+        legend.set_title("Opened file")
 
     # Call function 'show()' if it was not done before
     global show_called
