@@ -22,23 +22,70 @@ fig = None
 show_called = False
 
 
+############################# Helper function #################################
+def mklbl(fname):
+    if len(fname) > 28:
+        return "%s~%s" % (fname[:12], fname[-16:-4])
+    else:
+        return fname[:-4]
+
+
+def make_spelist(config, fname):
+    """
+    Create a list of all SPE files in working directory, except those
+    present in config. Also the list contains a pointer (active file)
+    """
+    global spelist
+    spelist = [fl for fl in os.listdir(".") if
+                        fl.endswith(".SPE") or fl.endswith(".spe")]
+
+    # sort list and get rid of calibration/dark files
+    spelist.sort()
+    try:
+        spelist.remove(config.get("wavenum_calibration", "datafile"))
+    except cp.NoOptionError:
+        pass
+    try:
+        spelist.remove(config.get("wavenum_calibration", "darkfile"))
+    except cp.NoOptionError:
+        pass
+    try:
+        spelist.remove(config.get("general", "darkfile"))
+    except cp.NoOptionError:
+        pass
+
+    # Rotate the circular buffer until the first element is our required file
+    while not spelist[0] == fname:
+        spelist.append(spelist.pop(0))
+    return spelist
+
+
+################################### Classes ###################################
+# LineColors  - management of colors for lines
+# FileReader  - reading of SPE files and data calibration
+# DataItem    - structure to save the data from files
+# DataSet     - a set of DataItem's with methods to manage the data
+# Window      - a Matplotlib figure with key press handlers
 ###############################################################################
 class LineColors:
+    """ Management of line colors on the plot """
     def __init__(self):
-        self.seq  = ["b", "k", "g", "m", "c", "y"]
-        self.status = [0] * len(self.seq)
+        self.seq = ["b", "k", "g", "m", "c", "y"]  # Sequence of colors
+        self.status = [0] * len(self.seq)  # 1 if color is used, 0 otherwise
 
     def use(self):
+        """ Use the next available color. """
         if 0 in self.status:
             for i, color in enumerate(self.seq):
                 if not self.status[i]:
                     self.status[i] = 1
                     return color
         else:
-            print "All colors are used"
+            print "All colors are used, cannot add one more line!"
             return False
 
     def free(self, key):
+        """ Mark color given by <key> as unused """
         idx = self.seq.index(key)
         self.status[idx] = 0
         print "Color '%s' is now free" % key
@@ -51,9 +98,10 @@ class LineColors:
 
 
 class FileReader():
+    """ Reading of SPE files and calibration of data """
     def __init__(self, config):
         # Figure out if we need to perform calibration
-        self.calibrated = False
+        self.calibrated = True
         if self.calibrated:
             xcal_coeffs = np.loadtxt("xcal_coeffs.csv")
         else:
@@ -63,7 +111,7 @@ class FileReader():
     def read_spe(self, fname):
         spec = winspec.Spectrum(fname)
         if config.get("general", "use_dark") == "yes":
-            if   os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
+            if os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
                 spec.background_correct(fname[:-3] + "dark.SPE")
             elif os.path.exists(fname[:-3] + "dark.spe"):
                 spec.background_correct(fname[:-3] + "dark.spe")
@@ -73,52 +121,19 @@ class FileReader():
         return self.cal_f(spec.wavelen), spec.lum
 
 
-class DDDDDDataSet():
-    """
-    This class contains a list of SPE files and the corresponding data.
-
-    Data format
-    ---
-      data = { <fname> : (<data shape>, <color>, <xvals>, <spectra>) }
-    where <data shape> is the number of spectra to from the corresponding file
-    <fname>. Therefore one can access the spectral data in such a way:
-      shape, array_X, spectra = data["<fname>"]
-    <color> is simply the color of the line (assigned automatically)
-
-    If <data shape> is 0, then <spectra> is None (not available).
-
-    If <data shape> is 1, then
-      spectra = [array_Y]
-
-    if <data shape> is n, then
-      spectra = [array_Y1, array_Y2, ..., array_Yn]
-
-    To plot a spectrum:
-        plot(array_X, array_Y)
-    or
-        plot(array_X, spectra[0])
-
-    Usage
-    ---
-    * dataset.data - the data itself
-    * dataset.add(")
-    """
-    def __init__(self, spelist):
-        """ Create an empty dataset from given list of files """
-        self.data = {}.fromkeys(spelist, (0, None))
-
-#    def add(self, fname):
-#        self.data[fname] =
-
-    def remove(self, fname):
-        del self.data[index]
-
-
 class DataItem:
+    """
+    DataItem is a container to store data from one single file. It contains
+    the following attributes:
+        * self.fname - name of the SPE file
+        * self.shape - number of spectra in the file
+        * self.color - color for line on the plot
+        * self.xvals - numpy array of x-values
+        * self.yvals - numpy array of y-values
+    """
     def __init__(self, fname):
         self.fname = fname
         self.shape = 0
-        self.color = None
         self.xvals = []
         self.yvals = []
 
@@ -130,8 +145,31 @@ class DataItem:
         else:
             return ("empty!\n")
 
+    def reset(self):
+        self.__init__(self.fname)
+
 
 class DataSet:
+    """
+    This class contains a list of SPE files and the corresponding data.
+
+    Data format
+    ---
+      data = { <fname> : <item> }
+    where <item> is an instance of class DataItem
+
+    Methods
+    ---
+    You can place data from file <fname> in the following way:
+      dataset[<fname>] = xvals, yvals
+    The corresponding DataItem will automatically get next free line color
+
+    Remove item from dataset:
+      dataset.remove(<fname>)
+
+    Plot all lines:
+      dataset.plot()
+    """
     def __init__(self, files):
         self.data = dict((key, DataItem(key)) for key in files)
         self.cls = LineColors()
@@ -139,8 +177,9 @@ class DataSet:
     def __setitem__(self, key, item):
         if self.data[key].shape == 0:
             self.data[key].xvals, self.data[key].yvals = item
-            self.data[key].shape = 1
             self.data[key].color = self.cls.use()
+            if self.data[key].color:
+                self.data[key].shape = 1
         else:
             print "File '%.35s' is already opened, nothing to do" % key
 
@@ -151,29 +190,26 @@ class DataSet:
         return repr(self.data)
 
     def remove(self, key):
-        self.data[key].shape = 0
-        self.cls.free(self.data[key].color)
-        self.data[key].xvals, self.data[key].yvals = 0, 0
+        if self.data[key].shape:
+            self.data[key].reset()
+            self.cls.free(self.data[key].color)
 
-    def show(self):
+    def plot(self):
         for key in self.data:
             if self.data[key].shape:
-                pl.plot(self.data[key].xvals, self.data[key].yvals, self.data[key].color)
-
-
+                pl.plot(self.data[key].xvals,
+                        self.data[key].yvals,
+                        self.data[key].color, lw=0.75, label=mklbl(key))
 
 
 class Window():
+    """ A matplotlib figure used to display plots """
     def __init__(self, config, fname):
         self.spelist = make_spelist(config, fname)
 
-        # Create a data container
+        # Create a data container and a file reader instance
         self.dataset = DataSet(self.spelist)
-
-        # Read spectrum and place first data into the container
         self.dataReader = FileReader(config)
-        print self.dataset
-
 
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
@@ -183,9 +219,7 @@ class Window():
         self.draw()
         pl.show()
 
-
-
-    def key_event(self,e):
+    def key_event(self, e):
         if e.key == "right":
             self.go_next()
         if e.key == "left":
@@ -195,27 +229,19 @@ class Window():
         if e.key == "d" or e == "D":
             self.delete()
 
-
-
     def draw(self):
-        self.dataset.show()
+        self.dataset.plot()
         fname = self.spelist[0]
         x, y = self.dataReader.read_spe(fname)
-        # draw our self.dataset.data
-#        for line in self.dataset.data:
-#            x, y, fname = line
-            # Crop the middle of a very long filename and use the result in legend
-        if len(fname) > 28:
-            lbl = "%s~%s" % (fname[:12], fname[-16:-4])
-        else:
-            lbl = fname[:-4]
-        pl.plot(x, y, "r", lw=1.5, label=lbl)
+        pl.plot(x, y, "r", lw=1.5, label=mklbl(fname))
+
         # change figure title and plot params
-        self.canvas.set_window_title(self.spelist[0])
+        self.canvas.set_window_title(fname)
+
         # Formatting - zero level, limits of axes
         self.ax.set_xlim(x.min(), x.max())
         pl.margins(0.0, 0.05)  # 5% vertical margins
-        pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=0.75, alpha=0.5)
+        pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=.75, alpha=.5)
 
         # Formatting - labels and title
         pl.ylabel("Counts")
@@ -255,7 +281,6 @@ class Window():
         """
         fname = self.spelist[0]
         self.dataset[fname] = self.dataReader.read_spe(fname)
-
 
     def delete(self):
         """
@@ -350,42 +375,6 @@ def quiz(config, fname):
 
 
 
-def hold():
-    """ Mark actual plot and do not erase it. """
-    print "hold(): NOT_IMPLEMENTED"
-
-
-def key_event(e):
-    if e.key == "right":
-        go_next()
-    if e.key == "left":
-        go_prev()
-    if e.key == "h" or e == "H":
-        hold()
-
-
-def make_spelist(config, fname):
-    """
-    Create a list of all SPE files in working directory, except those
-    present in config. Also the list contains a pointer (active file)
-    """
-    global spelist
-    spelist = [fl for fl in os.listdir(".") if
-                        fl.endswith(".SPE") or fl.endswith(".spe")]
-
-    # sort list and get rid of calibration/dark files
-    spelist.sort()
-    try: spelist.remove(config.get("wavenum_calibration", "datafile"))
-    except cp.NoOptionError: pass
-    try: spelist.remove(config.get("wavenum_calibration", "darkfile"))
-    except cp.NoOptionError: pass
-    try: spelist.remove(config.get("general", "darkfile"))
-    except cp.NoOptionError: pass
-
-    # Rotate the circular buffer until the first element is our required file
-    while not spelist[0] == fname:
-        spelist.append(spelist.pop(0))
-    return spelist
 
 
 # Detect the working directory: it contains data file given as argv[1]
