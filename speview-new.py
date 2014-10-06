@@ -70,8 +70,9 @@ def make_spelist(config, fname):
 class LineColors:
     """ Management of line colors on the plot """
     def __init__(self):
-        self.seq = ["b", "k", "g", "m", "c", "y"]  # Sequence of colors
+        self.seq = ["r", "k", "g", "m", "c", "y"]  # Sequence of colors
         self.status = [0] * len(self.seq)  # 1 if color is used, 0 otherwise
+        self.default = "b"
 
     def use(self):
         """ Use the next available color. """
@@ -95,6 +96,8 @@ class LineColors:
         for i in range(len(self.seq)):
             s += "%s = %i\n" % (self.seq[i], self.status[i])
         return s
+
+line_colors = LineColors()
 
 
 class FileReader():
@@ -172,12 +175,11 @@ class DataSet:
     """
     def __init__(self, files):
         self.data = dict((key, DataItem(key)) for key in files)
-        self.cls = LineColors()
 
     def __setitem__(self, key, item):
         if self.data[key].shape == 0:
             self.data[key].xvals, self.data[key].yvals = item
-            self.data[key].color = self.cls.use()
+            self.data[key].color = line_colors.use()
             if self.data[key].color:
                 self.data[key].shape = 1
         else:
@@ -192,14 +194,14 @@ class DataSet:
     def remove(self, key):
         if self.data[key].shape:
             self.data[key].reset()
-            self.cls.free(self.data[key].color)
+            line_colors.free(self.data[key].color)
 
     def plot(self):
         for key in self.data:
             if self.data[key].shape:
                 pl.plot(self.data[key].xvals,
                         self.data[key].yvals,
-                        self.data[key].color, lw=0.75, label=mklbl(key))
+                        self.data[key].color, lw=1.0, label=mklbl(key))
 
 
 class Window():
@@ -233,7 +235,7 @@ class Window():
         self.dataset.plot()
         fname = self.spelist[0]
         x, y = self.dataReader.read_spe(fname)
-        pl.plot(x, y, "r", lw=1.5, label=mklbl(fname))
+        pl.plot(x, y, line_colors.default, lw=1.25, label=mklbl(fname))
 
         # change figure title and plot params
         self.canvas.set_window_title(fname)
