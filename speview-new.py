@@ -23,7 +23,12 @@ show_called = False
 
 
 ############################# Helper function #################################
+# mklbl         - make a label for legend, which is not longer than 28 symbols
+# make_spelist  - make a list of all SPE file in the folder
+# quiz          - ask user several questions and create config file
+###############################################################################
 def mklbl(fname):
+    """ Make a label for legend, which is not longer than 28 symbols. """
     if len(fname) > 28:
         return "%s~%s" % (fname[:12], fname[-16:-4])
     else:
@@ -58,6 +63,59 @@ def make_spelist(config, fname):
     while not spelist[0] == fname:
         spelist.append(spelist.pop(0))
     return spelist
+
+
+def quiz(config, fname):
+    """ Ask user several questions and create config for this directory. """
+    ans = pz.Question("Would you like to use\nwavenumber calibration?")
+    spelist = [file for file in os.listdir(".") if
+                            file.endswith(".SPE") or file.endswith(".spe")]
+    if ans:
+        config.set("general", "wavenum_calibration", "yes")
+        ans = None
+        while not ans:
+            ans = pz.List(("SPE files",), data=[spelist],
+                     title="SPE file for calibration")[0]
+            config.set("wavenum_calibration", "datafile", ans)
+        spelist.remove(ans)
+        ans = None
+        while not ans:
+            ans = pz.List(("SPE files",), data=[spelist],
+                     title="Corresponding dark current SPE file")[0]
+            config.set("wavenum_calibration", "darkfile", ans)
+        spelist.remove(ans)
+        ans = None
+        materials = ["polystyrene",
+                     "cyclohexane",
+                     "paracetamol",
+                     "naphthalene"]
+        while not ans:
+            ans = pz.List(("Known materials",), data=[materials],
+                     title="Select the material")[0]
+            config.set("wavenum_calibration", "material", ans)
+        ans = None
+        while ans is None:
+            try:
+                ans = int(pz.GetText("Shift of x-axis (px)", entry_text="0"))
+            except ValueError:
+                ans = None
+        config.set("wavenum_calibration", "shift", ans)
+
+    ans = pz.Question("Would you like to use\ndark current correction?")
+    if ans:
+        config.set("general", "use_dark", "yes")
+        ans = None
+        while not ans:
+            ans = pz.List(("SPE files",), data=[spelist],
+                     title="Corresponding dark current SPE file")[0]
+            config.set("general", "darkfile", ans)
+
+    with open(".speview.conf", 'wb') as configfile:
+        config.write(configfile)
+    ans = pz.Question("Would you like to see the SPE file?\n" +
+                                      os.path.basename(sys.argv[1]))
+    if ans:
+        read_spe(config, fname)
 
 
 ################################### Classes ###################################
@@ -104,12 +162,25 @@ class FileReader():
     """ Reading of SPE files and calibration of data """
     def __init__(self, config):
         # Figure out if we need to perform calibration
-        self.calibrated = True
-        if self.calibrated:
-            xcal_coeffs = np.loadtxt("xcal_coeffs.csv")
-        else:
-            xcal_coeffs = [1, 0]  # - uncalibrated
-        self.cal_f = lambda x: np.polyval(xcal_coeffs, x)
+        self.calibrated = False
+        if config.get("general", "wavenum_calibration") == "yes":
+            # check if it already done
+            if os.path.exists("xcal_coeffs.csv"):
+                # just read calibration function from it!
+                self.cal_f = lambda x: np.polyval(np.loadtxt("xcal_coeffs.csv"), x)
+            else:
+                material = config.get("wavenum_calibration", "material")
+                xcalfile = config.get("wavenum_calibration", "datafile")
+                darkfile = config.get("wavenum_calibration", "darkfile")
+                shift = config.getint("wavenum_calibration", "shift")
+                self.cal_f, p = xcal.calibrate_spe(xcalfile, darkfile,
+                                              material=material,
+                                              figure=pl.figure(), shift=shift)
+                pl.savefig("calibration_report-" + material + ".pdf")
+                pl.close(pl.gcf())
+                np.savetxt("xcal_coeffs.csv", p)
+            self.calibrated = True
+
 
     def read_spe(self, fname):
         spec = winspec.Spectrum(fname)
@@ -290,109 +361,14 @@ class Window():
         """
         self.dataset.remove(self.spelist[0])
 
-###############################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def quiz(config, fname):
-    """ Ask user several questions and create config for this directory """
-    ans = pz.Question("Would you like to use\nwavenumber calibration?")
-    spelist = [file for file in os.listdir(".") if
-                            file.endswith(".SPE") or file.endswith(".spe")]
-    if ans:
-        config.set("general", "wavenum_calibration", "yes")
-        ans = None
-        while not ans:
-            ans = pz.List(("SPE files",), data=[spelist],
-                     title="SPE file for calibration")[0]
-            config.set("wavenum_calibration", "datafile", ans)
-        spelist.remove(ans)
-        ans = None
-        while not ans:
-            ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("wavenum_calibration", "darkfile", ans)
-        spelist.remove(ans)
-        ans = None
-        materials = ["polystyrene",
-                     "cyclohexane",
-                     "paracetamol",
-                     "naphthalene"]
-        while not ans:
-            ans = pz.List(("Known materials",), data=[materials],
-                     title="Select the material")[0]
-            config.set("wavenum_calibration", "material", ans)
-        ans = None
-        while ans is None:
-            try:
-                ans = int(pz.GetText("Shift of x-axis (px)", entry_text="0"))
-            except ValueError:
-                ans = None
-        config.set("wavenum_calibration", "shift", ans)
-
-    ans = pz.Question("Would you like to use\ndark current correction?")
-    if ans:
-        config.set("general", "use_dark", "yes")
-        ans = None
-        while not ans:
-            ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("general", "darkfile", ans)
-
-    with open(".speview.conf", 'wb') as configfile:
-        config.write(configfile)
-    ans = pz.Question("Would you like to see the SPE file?\n" +
-                                      os.path.basename(sys.argv[1]))
-    if ans:
-        read_spe(config, fname)
-
-
-
-
-
-
-
+##################################### START ###################################
 
 # Detect the working directory: it contains data file given as argv[1]
 fullname = sys.argv[1]
 fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
     os.chdir(os.path.dirname(fullname))
-
-# Create a container for the datasets
-data = [()]
-
-# Create a container for list of SPE files in the working directory
-# This is a circular buffer, i.e. sorted list of files with element [0]
-# being the currently displayed SPE file
-spelist = []
-mpl_cnc = False
 
 # Check if a config file is available and create it if necessary
 if os.path.exists(".speview.conf"):
