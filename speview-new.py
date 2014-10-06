@@ -22,12 +22,34 @@ fig = None
 show_called = False
 
 
-
-
-
-
-
 ###############################################################################
+class LineColors:
+    def __init__(self):
+        self.seq  = ["r", "g", "b", "k", "m", "c", "y"]
+        self.status = [0] * len(self.seq)
+
+    def use(self):
+        if 0 in self.status:
+            for i, color in enumerate(self.seq):
+                if not self.status[i]:
+                    self.status[i] = 1
+                    return color
+        else:
+            print "All colors are used"
+            return False
+
+    def free(self, key):
+        idx = self.seq.index(key)
+        self.status[idx] = 0
+        print "Color '%s' is now free" % key
+
+    def __repr__(self):
+        s = ""
+        for i in range(len(self.seq)):
+            s += "%s = %i\n" % (self.seq[i], self.status[i])
+        return s
+
+
 class FileReader():
     def __init__(self, config):
         # Figure out if we need to perform calibration
@@ -48,26 +70,50 @@ class FileReader():
             else:
                 spec.background_correct(config.get("general", "darkfile"))
 
-        return (self.cal_f(spec.wavelen), spec.lum, fname)
+        return fname, (1, self.cal_f(spec.wavelen), spec.lum)
 
 
 class DataSet():
-    def __init__(self):
-        self.data = [()]
+    """
+    This class contains a list of SPE files and the corresponding data.
 
-    def add(self, item):
-        self.data.append(item)
+    Data format
+    ---
+      data = { <fname> : (<data shape>, <color>, <xvals>, <spectra>) }
+    where <data shape> is the number of spectra to from the corresponding file
+    <fname>. Therefore one can access the spectral data in such a way:
+      shape, array_X, spectra = data["<fname>"]
+    <color> is simply the color of the line (assigned automatically)
 
-    def hold(self):
-        """ Append an empty item, (changed by next call to replace)"""
-        if not self.data[-1] == ([], [], ""):
-            self.data.append(([], [], ""))
+    If <data shape> is 0, then <spectra> is None (not available).
 
-    def replace(self, item):
-        self.data[-1] = item
+    If <data shape> is 1, then
+      spectra = [array_Y]
 
-    def remove(self, index):
+    if <data shape> is n, then
+      spectra = [array_Y1, array_Y2, ..., array_Yn]
+
+    To plot a spectrum:
+        plot(array_X, array_Y)
+    or
+        plot(array_X, spectra[0])
+
+    Usage
+    ---
+    * dataset.data - the data itself
+    * dataset.add(")
+    """
+    def __init__(self, spelist):
+        """ Create an empty dataset from given list of files """
+        self.data = {}.fromkeys(spelist, (0, None))
+
+    def add(self, fname):
+        self.data[fname] =
+
+    def remove(self, fname):
         del self.data[index]
+
+
 
 
 
@@ -76,7 +122,7 @@ class Window():
         self.spelist = make_spelist(config, fname)
 
         # Create a data container
-        self.dataset = DataSet()
+        self.dataset = DataSet(self.spelist)
 
         # Read spectrum and place first data into the container
         self.dataReader = FileReader(config)
