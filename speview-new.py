@@ -25,7 +25,7 @@ show_called = False
 ###############################################################################
 class LineColors:
     def __init__(self):
-        self.seq  = ["r", "g", "b", "k", "m", "c", "y"]
+        self.seq  = ["b", "k", "g", "m", "c", "y"]
         self.status = [0] * len(self.seq)
 
     def use(self):
@@ -70,10 +70,10 @@ class FileReader():
             else:
                 spec.background_correct(config.get("general", "darkfile"))
 
-        return fname, (1, self.cal_f(spec.wavelen), spec.lum)
+        return self.cal_f(spec.wavelen), spec.lum
 
 
-class DataSet():
+class DDDDDDataSet():
     """
     This class contains a list of SPE files and the corresponding data.
 
@@ -107,12 +107,58 @@ class DataSet():
         """ Create an empty dataset from given list of files """
         self.data = {}.fromkeys(spelist, (0, None))
 
-    def add(self, fname):
-        self.data[fname] =
+#    def add(self, fname):
+#        self.data[fname] =
 
     def remove(self, fname):
         del self.data[index]
 
+
+class DataItem:
+    def __init__(self, fname):
+        self.fname = fname
+        self.shape = 0
+        self.color = None
+        self.xvals = []
+        self.yvals = []
+
+    def __repr__(self):
+        if self.shape:
+            return ("\nstatus=%i color=%s X=%20.20s Y=%20.20s\n" %
+                    (self.shape, repr(self.color),
+                     repr(self.xvals), repr(self.yvals)))
+        else:
+            return ("empty!\n")
+
+
+class DataSet:
+    def __init__(self, files):
+        self.data = dict((key, DataItem(key)) for key in files)
+        self.cls = LineColors()
+
+    def __setitem__(self, key, item):
+        if self.data[key].shape == 0:
+            self.data[key].xvals, self.data[key].yvals = item
+            self.data[key].shape = 1
+            self.data[key].color = self.cls.use()
+        else:
+            print "File '%.35s' is already opened, nothing to do" % key
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __repr__(self):
+        return repr(self.data)
+
+    def remove(self, key):
+        self.data[key].shape = 0
+        self.cls.free(self.data[key].color)
+        self.data[key].xvals, self.data[key].yvals = 0, 0
+
+    def show(self):
+        for key in self.data:
+            if self.data[key].shape:
+                pl.plot(self.data[key].xvals, self.data[key].yvals, self.data[key].color)
 
 
 
@@ -126,8 +172,7 @@ class Window():
 
         # Read spectrum and place first data into the container
         self.dataReader = FileReader(config)
-        self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
-        print self.dataset.data
+        print self.dataset
 
 
         # Create a figure and show it (start the event loop)
@@ -153,15 +198,18 @@ class Window():
 
 
     def draw(self):
+        self.dataset.show()
+        fname = self.spelist[0]
+        x, y = self.dataReader.read_spe(fname)
         # draw our self.dataset.data
-        for line in self.dataset.data:
-            x, y, fname = line
+#        for line in self.dataset.data:
+#            x, y, fname = line
             # Crop the middle of a very long filename and use the result in legend
-            if len(fname) > 28:
-                lbl = "%s~%s" % (fname[:12], fname[-16:-4])
-            else:
-                lbl = fname[:-4]
-            pl.plot(x, y, label=lbl)
+        if len(fname) > 28:
+            lbl = "%s~%s" % (fname[:12], fname[-16:-4])
+        else:
+            lbl = fname[:-4]
+        pl.plot(x, y, "r", lw=1.5, label=lbl)
         # change figure title and plot params
         self.canvas.set_window_title(self.spelist[0])
         # Formatting - zero level, limits of axes
@@ -190,17 +238,14 @@ class Window():
 
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
-        print "check 'from itertools import cycle' and http://stackoverflow.com/questions/7799156/can-i-cycle-through-line-styles-in-matplotlib"
         self.ax.cla()
         self.spelist.append(self.spelist.pop(0))  # rotate circle forward
-        self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
         self.draw()
 
     def go_prev(self):
         """ Display previous SPE file. """
         self.ax.cla()
         self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
-        self.dataset.replace(self.dataReader.read_spe(self.spelist[0]))
         self.draw()
 
     def add(self):
@@ -208,17 +253,15 @@ class Window():
         Move the current datafile back in the datastack, so it is
         considered to be the previous one.
         """
-        self.dataset.hold()
+        fname = self.spelist[0]
+        self.dataset[fname] = self.dataReader.read_spe(fname)
+
 
     def delete(self):
         """
         Delete the current spectrum from the datastack.
         """
-        # First of all we make sure, that it is already stored somewhere
-        # in the dataset AND it is not the last element
-        for i, item in enumerate(self.dataset.data[:-1]):
-            if item[2] == self.spelist[0]:
-                self.dataset.remove(i)
+        self.dataset.remove(self.spelist[0])
 
 ###############################################################################
 
