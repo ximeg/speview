@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='speview',
-    version='0.2.1',
+    version='0.3.0',
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
     scripts=['speview.py'],
