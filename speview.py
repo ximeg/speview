@@ -181,6 +181,8 @@ class FileReader(object):
                 pl.close(pl.gcf())
                 np.savetxt("xcal_coeffs.csv", coeffs)
             self.calibrated = True
+        else:
+            self.cal_f = lambda x: np.polyval([1, 0], x)
 
     def read_spe(self, filename):
         """ Read data from SPE file and apply calibration function on it. """
@@ -376,7 +378,6 @@ class Window(object):
 ##################################### START ###################################
 
 # Detect the working directory: it contains data file given as argv[1]
-print "HELLO"
 fullname = sys.argv[1]
 fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
