@@ -28,8 +28,9 @@ import ConfigParser as cp
 ###############################################################################
 def mklbl(text):
     """ Make a label for legend, which is not longer than 28 symbols. """
-    if len(text) > 28:
-        return "%s~%s" % (text[:12], text[-16:-4])
+    max_len = 24
+    if len(text) > max_len:
+        return "%s~%s" % (text[:(max_len/2)], text[-(max_len/2 + 4):-4])
     else:
         return text[:-4]
 
@@ -242,7 +243,7 @@ class DataSet(object):
 
     Methods
     ---
-    You can place data from file <fname> in the following way:
+    You can place your data from the file <filename> in the following way:
       dataset[<filename>] = xvals, yvals
     The corresponding DataItem will automatically get next free line color
 
@@ -296,7 +297,7 @@ class Window(object):
 
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
-        self.ax = self.figure.gca()
+        self.axes = self.figure.gca()
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -317,7 +318,7 @@ class Window(object):
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
-        self.ax.cla()
+        self.axes.cla()
         self.dataset.plot()
         filename = self.spelist[0]
         x, y = self.reader.read_spe(filename)
@@ -327,7 +328,7 @@ class Window(object):
         self.canvas.set_window_title(filename)
 
         # Formatting - zero level, limits of axes
-        self.ax.set_xlim(min(x), max(x))
+        self.axes.set_xlim(min(x), max(x))
         pl.margins(0.0, 0.05)  # 5% vertical margins
         pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.75, alpha=.5)
 
