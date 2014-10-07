@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# simple SPE file viewer (Raman spectra)
-# license: GNU GPL
-# author:  roman.kiselew@gmail.com
-# date:    Sep.-Oct. 2014
+"""
+ simple SPE file viewer (Raman spectra)
+ license: GNU GPL
+ author:  roman.kiselew@gmail.com
+ date:    Sep.-Oct. 2014
+"""
 
 # Force MPL to save figures in the current working directory
 import matplotlib as m
@@ -18,71 +20,67 @@ import os
 import sys
 import ConfigParser as cp
 
-fig = None
-show_called = False
-
 
 ############################# Helper function #################################
 # mklbl         - make a label for legend, which is not longer than 28 symbols
 # make_spelist  - make a list of all SPE file in the folder
 # quiz          - ask user several questions and create config file
 ###############################################################################
-def mklbl(fname):
+def mklbl(text):
     """ Make a label for legend, which is not longer than 28 symbols. """
-    if len(fname) > 28:
-        return "%s~%s" % (fname[:12], fname[-16:-4])
+    if len(text) > 28:
+        return "%s~%s" % (text[:12], text[-16:-4])
     else:
-        return fname[:-4]
+        return text[:-4]
 
 
-def make_spelist(config, fname):
+def make_spelist(cfg, filename):
     """
     Create a list of all SPE files in working directory, except those
     present in config. Also the list contains a pointer (active file)
     """
-    global spelist
     spelist = [fl for fl in os.listdir(".") if
-                        fl.endswith(".SPE") or fl.endswith(".spe")]
+               fl.endswith(".SPE") or fl.endswith(".spe")]
 
     # sort list and get rid of calibration/dark files
     spelist.sort()
     try:
-        spelist.remove(config.get("wavenum_calibration", "datafile"))
+        spelist.remove(cfg.get("wavenum_calibration", "datafile"))
     except cp.NoOptionError:
         pass
     try:
-        spelist.remove(config.get("wavenum_calibration", "darkfile"))
+        spelist.remove(cfg.get("wavenum_calibration", "darkfile"))
     except cp.NoOptionError:
         pass
     try:
-        spelist.remove(config.get("general", "darkfile"))
+        spelist.remove(cfg.get("general", "darkfile"))
     except cp.NoOptionError:
         pass
 
     # Rotate the circular buffer until the first element is our required file
-    while not spelist[0] == fname:
+    while not spelist[0] == filename:
         spelist.append(spelist.pop(0))
     return spelist
 
 
-def quiz(config, fname):
+def quiz(cfg, filename):
     """ Ask user several questions and create config for this directory. """
     ans = pz.Question("Would you like to use\nwavenumber calibration?")
-    spelist = [file for file in os.listdir(".") if
-                            file.endswith(".SPE") or file.endswith(".spe")]
+    spelist = [name for name in os.listdir(".") if
+               name.endswith(".SPE") or name.endswith(".spe")]
     if ans:
-        config.set("general", "wavenum_calibration", "yes")
+        cfg.set("general", "wavenum_calibration", "yes")
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="SPE file for calibration")[0]
-            config.set("wavenum_calibration", "datafile", ans)
+                          title="SPE file for calibration")[0]
+            cfg.set("wavenum_calibration", "datafile", ans)
         spelist.remove(ans)
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("wavenum_calibration", "darkfile", ans)
+                          title="Corresponding dark current SPE file")[0]
+            cfg.set("wavenum_calibration", "darkfile", ans)
         spelist.remove(ans)
         ans = None
         materials = ["polystyrene",
@@ -91,31 +89,31 @@ def quiz(config, fname):
                      "naphthalene"]
         while not ans:
             ans = pz.List(("Known materials",), data=[materials],
-                     title="Select the material")[0]
-            config.set("wavenum_calibration", "material", ans)
+                          title="Select the material")[0]
+            cfg.set("wavenum_calibration", "material", ans)
         ans = None
         while ans is None:
             try:
                 ans = int(pz.GetText("Shift of x-axis (px)", entry_text="0"))
             except ValueError:
                 ans = None
-        config.set("wavenum_calibration", "shift", ans)
+        cfg.set("wavenum_calibration", "shift", ans)
 
     ans = pz.Question("Would you like to use\ndark current correction?")
     if ans:
-        config.set("general", "use_dark", "yes")
+        cfg.set("general", "use_dark", "yes")
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                     title="Corresponding dark current SPE file")[0]
-            config.set("general", "darkfile", ans)
+                          title="Corresponding dark current SPE file")[0]
+            cfg.set("general", "darkfile", ans)
 
     with open(".speview.conf", 'wb') as configfile:
-        config.write(configfile)
+        cfg.write(configfile)
     ans = pz.Question("Would you like to see the SPE file?\n" +
-                                      os.path.basename(sys.argv[1]))
+                      os.path.basename(sys.argv[1]))
     if ans:
-        read_spe(config, fname)
+        Window(cfg, filename)
 
 
 ################################### Classes ###################################
@@ -150,64 +148,73 @@ class LineColors:
         print "Color '%s' is now free" % key
 
     def __repr__(self):
-        s = ""
+        desc = ""
         for i in range(len(self.seq)):
-            s += "%s = %i\n" % (self.seq[i], self.status[i])
-        return s
+            desc += "%s = %i\n" % (self.seq[i], self.status[i])
+        return desc
 
 line_colors = LineColors()
 
 
 class FileReader():
     """ Reading of SPE files and calibration of data """
-    def __init__(self, config):
-        # Figure out if we need to perform calibration
+    def __init__(self, cfg):
+        """ Check if the calibration is required and perform it. """
+        self.cfg = cfg
         self.calibrated = False
-        if config.get("general", "wavenum_calibration") == "yes":
-            # check if it already done
+        if cfg.get("general", "wavenum_calibration") == "yes":
+            # check if calibration coefficients are available
             if os.path.exists("xcal_coeffs.csv"):
-                # just read calibration function from it!
-                self.cal_f = lambda x: np.polyval(np.loadtxt("xcal_coeffs.csv"), x)
+                self.cal_f = lambda x: \
+                        np.polyval(np.loadtxt("xcal_coeffs.csv"), x)
             else:
-                material = config.get("wavenum_calibration", "material")
-                xcalfile = config.get("wavenum_calibration", "datafile")
-                darkfile = config.get("wavenum_calibration", "darkfile")
-                shift = config.getint("wavenum_calibration", "shift")
-                self.cal_f, p = xcal.calibrate_spe(xcalfile, darkfile,
-                                              material=material,
-                                              figure=pl.figure(), shift=shift)
+                material = cfg.get("wavenum_calibration", "material")
+                xcalfile = cfg.get("wavenum_calibration", "datafile")
+                darkfile = cfg.get("wavenum_calibration", "darkfile")
+                shift = cfg.getint("wavenum_calibration", "shift")
+                self.cal_f, coeffs = \
+                        xcal.calibrate_spe(xcalfile, darkfile,
+                                           material=material,
+                                           figure=pl.figure(), shift=shift)
                 pl.savefig("calibration_report-" + material + ".pdf")
                 pl.close(pl.gcf())
-                np.savetxt("xcal_coeffs.csv", p)
+                np.savetxt("xcal_coeffs.csv", coeffs)
             self.calibrated = True
 
-
-    def read_spe(self, fname):
-        spec = winspec.Spectrum(fname)
-        if config.get("general", "use_dark") == "yes":
-            if os.path.exists(fname[:-3] + "dark.SPE"):  # it overrides config
-                spec.background_correct(fname[:-3] + "dark.SPE")
-            elif os.path.exists(fname[:-3] + "dark.spe"):
-                spec.background_correct(fname[:-3] + "dark.spe")
+    def read_spe(self, filename):
+        """ Read data from SPE file and apply calibration function on it. """
+        spec = winspec.Spectrum(filename)
+        if self.cfg.get("general", "use_dark") == "yes":
+            if os.path.exists(filename[:-3] + "dark.SPE"):  # overrides config
+                spec.background_correct(filename[:-3] + "dark.SPE")
+            elif os.path.exists(filename[:-3] + "dark.spe"):
+                spec.background_correct(filename[:-3] + "dark.spe")
             else:
-                spec.background_correct(config.get("general", "darkfile"))
+                spec.background_correct(self.cfg.get("general", "darkfile"))
 
         return self.cal_f(spec.wavelen), spec.lum
+
+    def read_other_data_format(self, filename):
+        """ TODO Use data from some other file. """
+        print self.calibrated
+        print "read_other_data_format({}) - NOT IMPLEMENTED".format(filename)
+        raise NotImplementedError
 
 
 class DataItem:
     """
     DataItem is a container to store data from one single file. It contains
     the following attributes:
-        * self.fname - name of the SPE file
+        * self.filename - name of the SPE file
         * self.shape - number of spectra in the file
         * self.color - color for line on the plot
         * self.xvals - numpy array of x-values
         * self.yvals - numpy array of y-values
     """
-    def __init__(self, fname):
-        self.fname = fname
+    def __init__(self, filename):
+        self.filename = filename
         self.shape = 0
+        self.color = None
         self.xvals = []
         self.yvals = []
 
@@ -217,10 +224,11 @@ class DataItem:
                     (self.shape, repr(self.color),
                      repr(self.xvals), repr(self.yvals)))
         else:
-            return ("empty!\n")
+            return "empty!\n"
 
     def reset(self):
-        self.__init__(self.fname)
+        """ Mark data item as unused and remove the data. """
+        self.__init__(self.filename)
 
 
 class DataSet:
@@ -229,17 +237,17 @@ class DataSet:
 
     Data format
     ---
-      data = { <fname> : <item> }
+      data = { <filename> : <item> }
     where <item> is an instance of class DataItem
 
     Methods
     ---
     You can place data from file <fname> in the following way:
-      dataset[<fname>] = xvals, yvals
+      dataset[<filename>] = xvals, yvals
     The corresponding DataItem will automatically get next free line color
 
     Remove item from dataset:
-      dataset.remove(<fname>)
+      dataset.remove(<filename>)
 
     Plot all lines:
       dataset.plot()
@@ -263,11 +271,13 @@ class DataSet:
         return repr(self.data)
 
     def remove(self, key):
+        """ Delete data from DataItem and mark associated color as unused. """
         if self.data[key].shape:
-            self.data[key].reset()
             line_colors.free(self.data[key].color)
+            self.data[key].reset()
 
     def plot(self):
+        """ Draw the data stored in DataSet on the current axes. """
         for key in self.data:
             if self.data[key].shape:
                 pl.plot(self.data[key].xvals,
@@ -277,49 +287,57 @@ class DataSet:
 
 class Window():
     """ A matplotlib figure used to display plots """
-    def __init__(self, config, fname):
-        self.spelist = make_spelist(config, fname)
+    def __init__(self, cfg, filename):
+        self.spelist = make_spelist(cfg, filename)
 
         # Create a data container and a file reader instance
         self.dataset = DataSet(self.spelist)
-        self.dataReader = FileReader(config)
+        self.reader = FileReader(cfg)
 
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
         self.ax = self.figure.gca()
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
+        self.grid = True
         self.draw()
         pl.show()
 
-    def key_event(self, e):
-        if e.key == "right":
+    def key_event(self, event):
+        """ Check which key was pressed and call the corresp. function. """
+        if event.key == "right":
             self.go_next()
-        if e.key == "left":
+        if event.key == "left":
             self.go_prev()
-        if e.key == "a" or e == "A":
+        if event.key == "a" or event.key == "A":
             self.add()
-        if e.key == "d" or e == "D":
+        if event.key == "d" or event.key == "D":
             self.delete()
+        if event.key == "g" or event.key == "G":
+            self.grid = not self.grid
+            self.draw()
+
 
     def draw(self):
+        """ Redraw the plot. First draw stored data, then the current file. """
+        self.ax.cla()
         self.dataset.plot()
-        fname = self.spelist[0]
-        x, y = self.dataReader.read_spe(fname)
-        pl.plot(x, y, line_colors.default, lw=1.25, label=mklbl(fname))
+        filename = self.spelist[0]
+        x, y = self.reader.read_spe(filename)
+        pl.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
 
         # change figure title and plot params
-        self.canvas.set_window_title(fname)
+        self.canvas.set_window_title(filename)
 
         # Formatting - zero level, limits of axes
-        self.ax.set_xlim(x.min(), x.max())
+        self.ax.set_xlim(min(x), max(x))
         pl.margins(0.0, 0.05)  # 5% vertical margins
-        pl.hlines(0, x.min(), x.max(), "k", linestyles="--", lw=.75, alpha=.5)
+        pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.75, alpha=.5)
 
         # Formatting - labels and title
         pl.ylabel("Counts")
-        pl.title(fname)
-        if self.dataReader.calibrated:
+        pl.title(filename)
+        if self.reader.calibrated:
             pl.xlabel("Wavenumber, cm$^{-1}$")
         else:
             pl.xlabel("pixel number")
@@ -333,17 +351,17 @@ class Window():
         else:
             legend.set_title("Opened file")
 
+        if self.grid:
+            pl.grid(self.grid)
         self.canvas.draw()
 
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
-        self.ax.cla()
         self.spelist.append(self.spelist.pop(0))  # rotate circle forward
         self.draw()
 
     def go_prev(self):
         """ Display previous SPE file. """
-        self.ax.cla()
         self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
         self.draw()
 
@@ -352,19 +370,20 @@ class Window():
         Move the current datafile back in the datastack, so it is
         considered to be the previous one.
         """
-        fname = self.spelist[0]
-        self.dataset[fname] = self.dataReader.read_spe(fname)
+        filename = self.spelist[0]
+        self.dataset[filename] = self.reader.read_spe(filename)
+        self.draw()
 
     def delete(self):
-        """
-        Delete the current spectrum from the datastack.
-        """
+        """ Delete the current spectrum from the datastack. """
         self.dataset.remove(self.spelist[0])
+        self.draw()
 
 
 ##################################### START ###################################
 
 # Detect the working directory: it contains data file given as argv[1]
+print "HELLO"
 fullname = sys.argv[1]
 fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
@@ -374,36 +393,20 @@ if fullname.find("/") >= 0:
 if os.path.exists(".speview.conf"):
     config = cp.SafeConfigParser()
     config.read(".speview.conf")
-#    read_spe(config, fname)
-    w = Window(config, fname)
+    Window(config, fname)
 else:
-    ans = pz.Question("Should I just show the SPE file?\n" +
-                     "If you answer 'No', then I will\n" +
-                     "create a config with the standard\n" +
-                     "settings for this folder\n")
+    reply = pz.Question("Should I just show the SPE file?\n" +
+                        "If you answer 'No', then I will\n" +
+                        "create a config with the standard\n" +
+                        "settings for this folder\n")
     config = cp.RawConfigParser()
     config.add_section("general")
     config.add_section("wavenum_calibration")
     config.set("general", "wavenum_calibration", "no")
     config.set("general", "use_dark", "no")
-    if not ans:
+    if not reply:
         quiz(config, fname)
     else:
-        read_spe(config, fname)
+        Window(config, fname)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#
