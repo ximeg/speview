@@ -28,8 +28,9 @@ import ConfigParser as cp
 ###############################################################################
 def mklbl(text):
     """ Make a label for legend, which is not longer than 28 symbols. """
-    if len(text) > 28:
-        return "%s~%s" % (text[:12], text[-16:-4])
+    max_len = 24
+    if len(text) > max_len:
+        return "%s~%s" % (text[:(max_len/2)], text[-(max_len/2 + 4):-4])
     else:
         return text[:-4]
 
@@ -123,7 +124,7 @@ def quiz(cfg, filename):
 # DataSet     - a set of DataItem's with methods to manage the data
 # Window      - a Matplotlib figure with key press handlers
 ###############################################################################
-class LineColors:
+class LineColors(object):
     """ Management of line colors on the plot """
     def __init__(self):
         self.seq = ["r", "k", "g", "m", "c", "y"]  # Sequence of colors
@@ -156,7 +157,7 @@ class LineColors:
 line_colors = LineColors()
 
 
-class FileReader():
+class FileReader(object):
     """ Reading of SPE files and calibration of data """
     def __init__(self, cfg):
         """ Check if the calibration is required and perform it. """
@@ -180,6 +181,8 @@ class FileReader():
                 pl.close(pl.gcf())
                 np.savetxt("xcal_coeffs.csv", coeffs)
             self.calibrated = True
+        else:
+            self.cal_f = lambda x: np.polyval([1, 0], x)
 
     def read_spe(self, filename):
         """ Read data from SPE file and apply calibration function on it. """
@@ -201,7 +204,7 @@ class FileReader():
         raise NotImplementedError
 
 
-class DataItem:
+class DataItem(object):
     """
     DataItem is a container to store data from one single file. It contains
     the following attributes:
@@ -231,7 +234,7 @@ class DataItem:
         self.__init__(self.filename)
 
 
-class DataSet:
+class DataSet(object):
     """
     This class contains a list of SPE files and the corresponding data.
 
@@ -242,7 +245,7 @@ class DataSet:
 
     Methods
     ---
-    You can place data from file <fname> in the following way:
+    You can place your data from the file <filename> in the following way:
       dataset[<filename>] = xvals, yvals
     The corresponding DataItem will automatically get next free line color
 
@@ -285,7 +288,7 @@ class DataSet:
                         self.data[key].color, lw=1.0, label=mklbl(key))
 
 
-class Window():
+class Window(object):
     """ A matplotlib figure used to display plots """
     def __init__(self, cfg, filename):
         self.spelist = make_spelist(cfg, filename)
@@ -296,7 +299,7 @@ class Window():
 
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
-        self.ax = self.figure.gca()
+        self.axes = self.figure.gca()
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -309,18 +312,15 @@ class Window():
             self.go_next()
         if event.key == "left":
             self.go_prev()
-        if event.key == "a" or event.key == "A":
-            self.add()
-        if event.key == "d" or event.key == "D":
-            self.delete()
+        if event.key == " ":  # Space bar is pressed
+            self.toggle()
         if event.key == "g" or event.key == "G":
             self.grid = not self.grid
             self.draw()
 
-
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
-        self.ax.cla()
+        self.axes.cla()
         self.dataset.plot()
         filename = self.spelist[0]
         x, y = self.reader.read_spe(filename)
@@ -330,7 +330,7 @@ class Window():
         self.canvas.set_window_title(filename)
 
         # Formatting - zero level, limits of axes
-        self.ax.set_xlim(min(x), max(x))
+        self.axes.set_xlim(min(x), max(x))
         pl.margins(0.0, 0.05)  # 5% vertical margins
         pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.75, alpha=.5)
 
@@ -365,25 +365,19 @@ class Window():
         self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
         self.draw()
 
-    def add(self):
-        """
-        Move the current datafile back in the datastack, so it is
-        considered to be the previous one.
-        """
+    def toggle(self):
+        """ Toggle the state of the active line (saved or not). """
         filename = self.spelist[0]
-        self.dataset[filename] = self.reader.read_spe(filename)
-        self.draw()
-
-    def delete(self):
-        """ Delete the current spectrum from the datastack. """
-        self.dataset.remove(self.spelist[0])
+        if self.dataset[filename].shape:
+            self.dataset.remove(self.spelist[0])
+        else:
+            self.dataset[filename] = self.reader.read_spe(filename)
         self.draw()
 
 
 ##################################### START ###################################
 
 # Detect the working directory: it contains data file given as argv[1]
-print "HELLO"
 fullname = sys.argv[1]
 fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
