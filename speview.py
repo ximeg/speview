@@ -337,7 +337,7 @@ class Window(object):
             self.diff()
         if event.key == "D":
             self.diff_off()
-        if event.key == "v":
+        if event.key == "v" or "V":
             self.visible = not self.visible
             self.draw()
 
