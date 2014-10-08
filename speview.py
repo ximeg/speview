@@ -280,15 +280,13 @@ class DataSet(object):
             line_colors.free(self.data[key].color)
             self.data[key].reset()
 
-    def get_linenumber(self):
-        """ Return the number of lines being stored. """
-        counter = 0
+    def get_lines(self):
+        """ Return names of files being stored. """
         keys = []
         for key in self.data:
             if self.data[key].shape:
-                counter += 1
                 keys.append(key)
-        return counter, keys
+        return keys
 
     def plot(self):
         """ Draw the data stored in DataSet on the current axes. """
@@ -416,21 +414,24 @@ class Window(object):
 
     def diff(self):
         """ Subtract one spectrum from another one and plot the difference. """
-        linenumber, keys = self.dataset.get_linenumber()
-        if linenumber:
+        filename = self.spelist[0]
+        keys = self.dataset.get_lines()
+        if filename in keys:
+            keys.remove(filename)
+        if len(keys):
             if not self.axes_diff:
                 self.axes_diff = self.axes.twinx()
-            xcurr, ycurr = self.reader.read_spe(self.spelist[0])
-            if linenumber == 1:
+            if len(keys) == 1:  # No choice - subtract it!
                 item = self.dataset[keys[0]]
-            else:
+            else:  # Ask user which line he wants to subtract
                 ans = None
                 while not ans:
                     ans = pz.List(("Saved spectra",), data=[keys],
-                          title="Select line to subtract")[0]
-                item = self.dataset[ans]
+                          title="Select line to subtract")
+                item = self.dataset[ans[0]]
+            xcurr, ycurr = self.reader.read_spe(filename)
             self.diffdata = (ycurr - item.yvals,
-                             mklbl(self.spelist[0]) + "\n" +
+                             mklbl(filename) + "\n" +
                              mklbl(item.filename))
             self.draw()
 
