@@ -127,9 +127,10 @@ def quiz(cfg, filename):
 class LineColors(object):
     """ Management of line colors on the plot """
     def __init__(self):
-        self.seq = ["r", "k", "g", "m", "c", "y"]  # Sequence of colors
+        self.seq = ["#800000", "r", "g", "m", "k", "y"]  # Sequence of colors
         self.status = [0] * len(self.seq)  # 1 if color is used, 0 otherwise
-        self.default = "b"
+        self.default = "#0000b0"
+        self.diff    = "#008000"
 
     def use(self):
         """ Use the next available color. """
@@ -279,6 +280,16 @@ class DataSet(object):
             line_colors.free(self.data[key].color)
             self.data[key].reset()
 
+    def get_linenumber(self):
+        """ Return the number of lines being stored. """
+        counter = 0
+        keys = []
+        for key in self.data:
+            if self.data[key].shape:
+                counter += 1
+                keys.append(key)
+        return counter, keys
+
     def plot(self):
         """ Draw the data stored in DataSet on the current axes. """
         for key in self.data:
@@ -300,6 +311,8 @@ class Window(object):
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
         self.axes = self.figure.gca()
+        self.axes_diff = None
+        self.diffdata = None
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -317,14 +330,41 @@ class Window(object):
         if event.key == "g" or event.key == "G":
             self.grid = not self.grid
             self.draw()
+        if event.key == "d":
+            self.diff()
+        if event.key == "D":
+            self.diff_off()
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
+        if self.axes_diff:
+            self.axes_diff.cla()
         self.axes.cla()
+        pl.sca(self.axes)
+        # Plot stored data
         self.dataset.plot()
         filename = self.spelist[0]
+
+        # Plot current spectrum
         x, y = self.reader.read_spe(filename)
-        pl.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
+        self.axes.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
+
+        # Plot difference (if any)
+        if self.diffdata and self.axes_diff:
+            y, label = self.diffdata
+            self.axes_diff.plot(x, y, line_colors.diff, linestyle="-",
+                                lw=0.8, label=label, alpha=0.7)
+            legend_diff = self.axes_diff.legend(loc="center right",
+                                                fontsize="small",
+                                                fancybox=True,
+                                                frameon=True, framealpha=0.6)
+            legend_diff.draggable(True)
+            legend_diff.set_title("Difference")
+            self.axes_diff.set_ylabel("Difference in counts", color=line_colors.diff)
+            self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff, linestyles="--", lw=.75, alpha=.5)
+            for tl in self.axes_diff.get_yticklabels():
+                tl.set_color(line_colors.diff)
+        pl.sca(self.axes)
 
         # change figure title and plot params
         self.canvas.set_window_title(filename)
@@ -352,7 +392,7 @@ class Window(object):
             legend.set_title("Opened file")
 
         if self.grid:
-            pl.grid(self.grid)
+            self.axes.grid(self.grid, which='major', axis='both')
         self.canvas.draw()
 
     def go_next(self):
@@ -373,6 +413,34 @@ class Window(object):
         else:
             self.dataset[filename] = self.reader.read_spe(filename)
         self.draw()
+
+    def diff(self):
+        """ Subtract one spectrum from another one and plot the difference. """
+        linenumber, keys = self.dataset.get_linenumber()
+        if linenumber:
+            if not self.axes_diff:
+                self.axes_diff = self.axes.twinx()
+            xcurr, ycurr = self.reader.read_spe(self.spelist[0])
+            if linenumber == 1:
+                item = self.dataset[keys[0]]
+            else:
+                ans = None
+                while not ans:
+                    ans = pz.List(("Saved spectra",), data=[keys],
+                          title="Select line to subtract")[0]
+                item = self.dataset[ans]
+            self.diffdata = (ycurr - item.yvals,
+                             mklbl(self.spelist[0]) + "\n" +
+                             mklbl(item.filename))
+            self.draw()
+
+    def diff_off(self):
+        """ Get rid of difference line and axes """
+        if self.axes_diff:
+            self.axes_diff.cla()
+            self.axes_diff.yaxis.set_visible(False)
+            self.axes_diff = None
+            self.draw()
 
 
 ##################################### START ###################################
