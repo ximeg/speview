@@ -74,15 +74,15 @@ def quiz(cfg, filename):
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                          title="SPE file for calibration")[0]
-            cfg.set("wavenum_calibration", "datafile", ans)
-        spelist.remove(ans)
+                          title="SPE file for calibration")
+        cfg.set("wavenum_calibration", "datafile", ans[0])
+        spelist.remove(ans[0])
         ans = None
         while not ans:
             ans = pz.List(("SPE files",), data=[spelist],
-                          title="Corresponding dark current SPE file")[0]
-            cfg.set("wavenum_calibration", "darkfile", ans)
-        spelist.remove(ans)
+                          title="Corresponding dark current SPE file")
+        cfg.set("wavenum_calibration", "darkfile", ans[0])
+        spelist.remove(ans[0])
         ans = None
         materials = ["polystyrene",
                      "cyclohexane",
@@ -90,14 +90,18 @@ def quiz(cfg, filename):
                      "naphthalene"]
         while not ans:
             ans = pz.List(("Known materials",), data=[materials],
-                          title="Select the material")[0]
-            cfg.set("wavenum_calibration", "material", ans)
+                          title="Select the material")
+        cfg.set("wavenum_calibration", "material", ans[0])
         ans = None
         while ans is None:
-            try:
-                ans = int(pz.GetText("Shift of x-axis (px)", entry_text="0"))
-            except ValueError:
-                ans = None
+            ans = pz.GetText("Shift of x-axis (px)", entry_text="0")
+            if ans:
+                try:
+                    ans = int(ans)
+                    if abs(ans) > 50:
+                        ans = None
+                except ValueError:
+                    ans = None
         cfg.set("wavenum_calibration", "shift", ans)
 
     ans = pz.Question("Would you like to use\ndark current correction?")
