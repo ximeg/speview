@@ -375,6 +375,8 @@ class Window(object):
         self.axes.set_xlim(min(x), max(x))
         pl.margins(0.0, 0.05)  # 5% vertical margins
         pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.75, alpha=.5)
+        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
+        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
 
         # Formatting - labels and title
         pl.ylabel("Counts")
