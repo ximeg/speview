@@ -315,6 +315,7 @@ class Window(object):
         self.axes = self.figure.gca()
         self.axes_diff = None
         self.diffdata = None
+        self.visible = True
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -336,6 +337,9 @@ class Window(object):
             self.diff()
         if event.key == "D":
             self.diff_off()
+        if event.key == "v":
+            self.visible = not self.visible
+            self.draw()
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
@@ -349,7 +353,8 @@ class Window(object):
 
         # Plot current spectrum
         x, y = self.reader.read_spe(filename)
-        self.axes.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
+        if self.visible:
+            self.axes.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
 
         # Plot difference (if any)
         if self.diffdata and self.axes_diff:
@@ -374,7 +379,6 @@ class Window(object):
         # Formatting - zero level, limits of axes
         self.axes.set_xlim(min(x), max(x))
         pl.margins(0.0, 0.05)  # 5% vertical margins
-        pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.75, alpha=.5)
         self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
         self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
 
@@ -387,13 +391,18 @@ class Window(object):
             pl.xlabel("pixel number")
 
         # Formatting - legend
-        legend = pl.legend(loc="upper right", fontsize="small", fancybox=True,
-                           frameon=True, framealpha=0.6)
-        legend.draggable(True)
-        if len(legend.get_texts()) > 1:
-            legend.set_title("Opened files")
+        if self.visible or len(self.dataset.get_lines()):
+            pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.7, alpha=.5)
+            legend = pl.legend(loc="upper right", fontsize="small",
+                               fancybox=True, frameon=True, framealpha=0.6)
+            legend.draggable(True)
+            if len(legend.get_texts()) > 1:
+                legend.set_title("Opened files")
+            else:
+                legend.set_title("Opened file")
+            self.axes.yaxis.set_visible(True)
         else:
-            legend.set_title("Opened file")
+            self.axes.yaxis.set_visible(False)
 
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
@@ -402,11 +411,13 @@ class Window(object):
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
         self.spelist.append(self.spelist.pop(0))  # rotate circle forward
+        self.visible = True
         self.draw()
 
     def go_prev(self):
         """ Display previous SPE file. """
         self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
+        self.visible = True
         self.draw()
 
     def toggle(self):
