@@ -350,6 +350,7 @@ class Window(object):
         self.axes_diff = None
         self.diffdata = None
         self.visible = True
+        self.help = False
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -374,6 +375,14 @@ class Window(object):
         if event.key == "v" or event.key == "V":
             self.visible = not self.visible
             self.draw()
+        if event.key == "h" or event.key == "H":
+            if not self.help:
+                self.help = True
+            else:
+                self.help.set_visible(False)
+                self.help = False
+            self.draw()
+
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
@@ -440,6 +449,14 @@ class Window(object):
 
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
+
+        if self.help is True:
+            self.help = \
+              self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
+                               ha="left", va="center", family="monospace",
+                               bbox={"facecolor": "wheat", "alpha": 0.9,
+                                     "edgecolor": "black",
+                                     "boxstyle": "round, pad=1"})
         self.canvas.draw()
 
     def go_next(self):
