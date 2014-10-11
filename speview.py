@@ -23,7 +23,7 @@ import argparse as ap
 
 
 ########################### Texts and constants ###############################
-VERSION = "0.5.0"
+__version__ = "0.5.0"
 
 DESC = \
 """
@@ -52,7 +52,7 @@ keystrokes
       'h' or 'H'  -  display help
 
 speview, version %s
-""" % VERSION
+""" % __version__
 ###############################################################################
 
 
@@ -516,44 +516,44 @@ class Window(object):
 
 
 ##################################### START ###################################
+if __name__ == "__main__":
+    cmdparser = ap.ArgumentParser(version=__version__,
+                                description=DESC,
+                                epilog=KEYSTROKES,
+                                formatter_class=ap.RawDescriptionHelpFormatter)
+    cmdparser.add_argument("spefilename", help="Binary SPE file to be opened")
+    args = cmdparser.parse_args()
 
-cmdparser = ap.ArgumentParser(version=VERSION,
-                              description=DESC,
-                              epilog=KEYSTROKES,
-                              formatter_class=ap.RawDescriptionHelpFormatter)
-cmdparser.add_argument("spefilename", help="Binary SPE file to be opened")
-args = cmdparser.parse_args()
+    fullname = args.spefilename
+    if not os.path.exists(fullname):
+        print "{0}\nFILE NOT FOUND:\n{1}\n{0}\n".format("-" * len(fullname),
+                                                        fullname)
+        cmdparser.print_help()
+        sys.exit(1)
 
-fullname = args.spefilename
-if not os.path.exists(fullname):
-    print "{0}\nFILE NOT FOUND:\n{1}\n{0}\n".format("-" * len(fullname),
-                                                    fullname)
-    cmdparser.print_help()
-    sys.exit(1)
+    # Detect the working directory: it contains data file given as argv[1]
+    fname = os.path.basename(fullname)
+    if fullname.find("/") >= 0:
+        os.chdir(os.path.dirname(fullname))
 
-# Detect the working directory: it contains data file given as argv[1]
-fname = os.path.basename(fullname)
-if fullname.find("/") >= 0:
-    os.chdir(os.path.dirname(fullname))
-
-# Check if a config file is available and create it if necessary
-if os.path.exists(".speview.conf"):
-    config = cp.SafeConfigParser()
-    config.read(".speview.conf")
-    Window(config, fname)
-else:
-    reply = pz.Question("Should I just show the SPE file?\n" +
-                        "If you answer 'No', then I will\n" +
-                        "create a config with the standard\n" +
-                        "settings for this folder\n")
-    config = cp.RawConfigParser()
-    config.add_section("general")
-    config.add_section("wavenum_calibration")
-    config.set("general", "wavenum_calibration", "no")
-    config.set("general", "use_dark", "no")
-    if not reply:
-        quiz(config, fname)
-    else:
+    # Check if a config file is available and create it if necessary
+    if os.path.exists(".speview.conf"):
+        config = cp.SafeConfigParser()
+        config.read(".speview.conf")
         Window(config, fname)
+    else:
+        reply = pz.Question("Should I just show the SPE file?\n" +
+                            "If you answer 'No', then I will\n" +
+                            "create a config with the standard\n" +
+                            "settings for this folder\n")
+        config = cp.RawConfigParser()
+        config.add_section("general")
+        config.add_section("wavenum_calibration")
+        config.set("general", "wavenum_calibration", "no")
+        config.set("general", "use_dark", "no")
+        if not reply:
+            quiz(config, fname)
+        else:
+            Window(config, fname)
 
 
