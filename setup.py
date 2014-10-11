@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
+from speview import __version__
 
 setup(
     name='speview',
-    version='0.4.0',
+    version=__version__,
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
     scripts=['speview.py'],

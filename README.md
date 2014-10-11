@@ -132,6 +132,7 @@ matplotlib:
   * `D` to remove the result of subtraction (opposite of `d`)
   * `v` or `V` to toggle the visibility of current spectrum (useful if you,
     for example, would like to see only the result of the subtraction)
+  * **`h` or `H` to display the help message and the program version**
 
 #### Future plans
 What I would like to implement in the future:
