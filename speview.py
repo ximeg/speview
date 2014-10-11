@@ -19,6 +19,40 @@ import PyZenity as pz
 import os
 import sys
 import ConfigParser as cp
+import argparse
+
+
+########################### Texts and constants ###############################
+VERSION = "0.4.0"
+
+DESC = \
+"""
+This application display binary SPE files containing Raman spectra.
+It works in a similar to a photoviewer fashion.
+More info at  https://github.com/ximeg/speview
+"""
+
+KEYSTROKES = \
+"""
+Keystrokes
+----------
+In the main application window you can use the following keystrokes:
+        KEY             FUNCTION
+   <right arrow>  -  show next SPE file
+    <left arrow>  -  show previous SPE file
+     <space bar>  -  save current file (blue line) to the data buffer
+      'g' or 'G'  -  toggle grid state
+      'v' or 'V'  -  toggle visibility of current opened file
+             'd'  -  subtract a line from the current line
+             'D'  -  remove result of subtraction
+             'l'  -  toggle scale of Y-axis (linear or log)
+             'L'  -  toggle scale of X-axis (linear or log)
+      's' or 'S'  -  save current figure into a file
+      'h' or 'H'  -  display help
+
+speview, version %s
+""" % VERSION
+###############################################################################
 
 
 ############################# Helper function #################################
@@ -316,6 +350,7 @@ class Window(object):
         self.axes_diff = None
         self.diffdata = None
         self.visible = True
+        self.help = False
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
         self.grid = True
@@ -340,6 +375,14 @@ class Window(object):
         if event.key == "v" or event.key == "V":
             self.visible = not self.visible
             self.draw()
+        if event.key == "h" or event.key == "H":
+            if not self.help:
+                self.help = True
+            else:
+                self.help.set_visible(False)
+                self.help = False
+            self.draw()
+
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
@@ -406,6 +449,14 @@ class Window(object):
 
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
+
+        if self.help is True:
+            self.help = \
+              self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
+                               ha="left", va="center", family="monospace",
+                               bbox={"facecolor": "wheat", "alpha": 0.9,
+                                     "edgecolor": "black",
+                                     "boxstyle": "round, pad=1"})
         self.canvas.draw()
 
     def go_next(self):
@@ -463,8 +514,22 @@ class Window(object):
 
 ##################################### START ###################################
 
+cmdparser = argparse.ArgumentParser(version=VERSION,
+                                    description=DESC,
+                                    epilog=KEYSTROKES,
+                                    formatter_class=\
+                                    argparse.RawDescriptionHelpFormatter)
+cmdparser.add_argument("spefilename", help="Binary SPE file to be opened")
+args = cmdparser.parse_args()
+
+fullname = args.spefilename
+if not os.path.exists(fullname):
+    print "{0}\nFILE NOT FOUND:\n{1}\n{0}\n".format("-" * len(fullname),
+                                                    fullname)
+    cmdparser.print_help()
+    sys.exit(1)
+
 # Detect the working directory: it contains data file given as argv[1]
-fullname = sys.argv[1]
 fname = os.path.basename(fullname)
 if fullname.find("/") >= 0:
     os.chdir(os.path.dirname(fullname))
