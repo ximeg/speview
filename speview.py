@@ -19,7 +19,7 @@ import PyZenity as pz
 import os
 import sys
 import ConfigParser as cp
-import argparse
+import argparse as ap
 
 
 ########################### Texts and constants ###############################
@@ -27,16 +27,17 @@ VERSION = "0.4.0"
 
 DESC = \
 """
-This application display binary SPE files containing Raman spectra.
-It works in a similar to a photoviewer fashion.
-More info at  https://github.com/ximeg/speview
+short description
+  This application displays binary SPE files containing Raman spectra.
+  It works in a similar to a photoviewer fashion.
+  Find more info at GitHub:
+        https://github.com/ximeg/speview
 """
 
 KEYSTROKES = \
 """
-Keystrokes
-----------
-In the main application window you can use the following keystrokes:
+keystrokes
+  In the main application window you can use the following keystrokes:
         KEY             FUNCTION
    <right arrow>  -  show next SPE file
     <left arrow>  -  show previous SPE file
@@ -383,7 +384,6 @@ class Window(object):
                 self.help = False
             self.draw()
 
-
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
         if self.axes_diff:
@@ -397,7 +397,8 @@ class Window(object):
         # Plot current spectrum
         x, y = self.reader.read_spe(filename)
         if self.visible:
-            self.axes.plot(x, y, line_colors.default, lw=1.25, label=mklbl(filename))
+            self.axes.plot(x, y, line_colors.default, lw=1.25,
+                           label=mklbl(filename))
 
         # Plot difference (if any)
         if self.diffdata and self.axes_diff:
@@ -410,8 +411,10 @@ class Window(object):
                                                 frameon=True, framealpha=0.6)
             legend_diff.draggable(True)
             legend_diff.set_title("Difference")
-            self.axes_diff.set_ylabel("Difference in counts", color=line_colors.diff)
-            self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff, linestyles="--", lw=.75, alpha=.5)
+            self.axes_diff.set_ylabel("Difference in counts",
+                                      color=line_colors.diff)
+            self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff,
+                                  linestyles="--", lw=.75, alpha=.5)
             for tl in self.axes_diff.get_yticklabels():
                 tl.set_color(line_colors.diff)
         pl.sca(self.axes)
@@ -514,11 +517,10 @@ class Window(object):
 
 ##################################### START ###################################
 
-cmdparser = argparse.ArgumentParser(version=VERSION,
-                                    description=DESC,
-                                    epilog=KEYSTROKES,
-                                    formatter_class=\
-                                    argparse.RawDescriptionHelpFormatter)
+cmdparser = ap.ArgumentParser(version=VERSION,
+                              description=DESC,
+                              epilog=KEYSTROKES,
+                              formatter_class=ap.RawDescriptionHelpFormatter)
 cmdparser.add_argument("spefilename", help="Binary SPE file to be opened")
 args = cmdparser.parse_args()
 
