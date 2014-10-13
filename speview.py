@@ -20,16 +20,17 @@ import os
 import sys
 import ConfigParser as cp
 import argparse as ap
+from version import __version__
 
 
 ########################### Texts and constants ###############################
-__version__ = "0.5.0"
+
 
 DESC = \
 """
 short description
   This application displays binary SPE files containing Raman spectra.
-  It works in a similar to a photoviewer fashion.
+  It works in a similar fashion to a photoviewing application.
   Find more info at GitHub:
         https://github.com/ximeg/speview
 """
