@@ -87,7 +87,7 @@ one is typically found in something like `libqt4-dev`.
 Problem happens because for some reason the post-installation script
 "`pyside_postinstall.py`" did not run. Fix it by executing:
 ```
-python bin/pyside_postinstall.py -install
+python ~/.virtualenvs/<your_virtualenv>/bin/pyside_postinstall.py -install
 ```
 
 #### Description of requirements
