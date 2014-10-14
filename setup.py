@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
-from speview import __version__
+from version import __version__
 
 setup(
     name='speview',
     version=__version__,
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
-    scripts=['speview.py'],
+    scripts=['speview.py', "version.py"],
     url='https://github.com/ximeg/speview',
     license='LICENSE.txt',
     description='Program to display binary SPE files containing Raman spectra',
