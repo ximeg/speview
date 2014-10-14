@@ -118,8 +118,8 @@ Then a standard matplotlib window with a plotted spectrum will popup. You can
 use all features the matplotlib offers you:
   * Adjust figure size and line parameters
   * Pan and scale the plot with mouse and icons on top
-  * Save figure (`S` key)
-  * Turn grid on/off (`G` key)
+  * Save figure (`s` key)
+  * Turn grid on/off (`g` key)
   * Turn axis scale (log or linear) with `l` key for y-axis and `L` key for
     x-axis
 

@@ -45,7 +45,7 @@ keystrokes
              'D'  -  remove result of subtraction
              'l'  -  toggle scale of Y-axis (linear or log)
              'L'  -  toggle scale of X-axis (linear or log)
-      's' or 'S'  -  save current figure into a file
+             's'  -  save current figure into a file
       'i' or 'I'  -  display file info ('I' produces a pop-up dialog)
             'F5'  -  select the default figure format
       'h' or 'H'  -  display help
