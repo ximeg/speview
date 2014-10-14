@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
- simple SPE file viewer (Raman spectra)
+ simple SPE file viewer (Raman spectra) - file with definitions
  license: GNU GPL
  author:  roman.kiselew@gmail.com
  date:    Sep.-Oct. 2014
@@ -20,12 +18,10 @@ import os
 import sys
 import ConfigParser as cp
 import argparse as ap
-from version import __version__
 
+from speview import __version__
 
 ########################### Texts and constants ###############################
-
-
 DESC = \
 """
 short description
@@ -50,6 +46,8 @@ keystrokes
              'l'  -  toggle scale of Y-axis (linear or log)
              'L'  -  toggle scale of X-axis (linear or log)
       's' or 'S'  -  save current figure into a file
+      'i' or 'I'  -  display file info ('I' produces a pop-up dialog)
+            'F5'  -  select the default figure format
       'h' or 'H'  -  display help
 
 speview, version %s
@@ -238,6 +236,11 @@ class FileReader(object):
 
         return self.cal_f(spec.wavelen), spec.lum
 
+    def read_info(self, filename):
+        """ Read acquisition information and comments from the file. """
+        spec = winspec.Spectrum(filename)
+        return spec.fileinfo
+
     def read_other_data_format(self, filename):
         """ TODO Use data from some other file. """
         print self.calibrated
@@ -328,13 +331,13 @@ class DataSet(object):
                 keys.append(key)
         return keys
 
-    def plot(self):
+    def plot(self, axes):
         """ Draw the data stored in DataSet on the current axes. """
         for key in self.data:
             if self.data[key].shape:
-                pl.plot(self.data[key].xvals,
-                        self.data[key].yvals,
-                        self.data[key].color, lw=1.0, label=mklbl(key))
+                axes.plot(self.data[key].xvals,
+                          self.data[key].yvals,
+                          self.data[key].color, lw=1.0, label=mklbl(key))
 
 
 class Window(object):
@@ -349,13 +352,20 @@ class Window(object):
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
         self.axes = self.figure.gca()
+
         self.axes_diff = None
         self.diffdata = None
         self.visible = True
         self.help = False
+        self.grid = True
+        self.show_info = False
+        self.boxprops = {"facecolor": "wheat",
+                       "alpha": 0.9,
+                       "edgecolor": "black",
+                       "boxstyle": "round, pad=1"}
+
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
-        self.grid = True
         self.draw()
         pl.show()
 
@@ -384,6 +394,22 @@ class Window(object):
                 self.help.set_visible(False)
                 self.help = False
             self.draw()
+        if event.key == "i":
+            self.show_info = not self.show_info
+            self.draw()
+        if event.key == "I":
+            pz.InfoMessage(self.reader.read_info(self.spelist[0]))
+        if event.key == "f5":
+            content = [(fmt, desc) for fmt, desc in
+                       self.canvas.get_supported_filetypes().iteritems()]
+            ans = pz.List(("Formats", "Descr"),
+                          data=content, title="Select format for figures")
+            if ans:
+                print "Selected format for images: '{}'".format(ans[0])
+                m.rcParams['savefig.format'] = ans[0]
+            else:
+                print "Canceled by user. Current format is '{}'".format(m.rcParams['savefig.format'])
+
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
@@ -392,7 +418,7 @@ class Window(object):
         self.axes.cla()
         pl.sca(self.axes)
         # Plot stored data
-        self.dataset.plot()
+        self.dataset.plot(self.axes)
         filename = self.spelist[0]
 
         # Plot current spectrum
@@ -454,13 +480,18 @@ class Window(object):
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
 
+        # Display program help
         if self.help is True:
             self.help = \
               self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
                                ha="left", va="center", family="monospace",
-                               bbox={"facecolor": "wheat", "alpha": 0.9,
-                                     "edgecolor": "black",
-                                     "boxstyle": "round, pad=1"})
+                               bbox=self.boxprops)
+
+        # Display the file-related information
+        if self.show_info is True:
+            self.axes.text(x.min(), 0.0, self.reader.read_info(filename),
+                               fontsize="medium", ha="left", va="bottom",
+                               family="monospace", bbox=self.boxprops)
         self.canvas.draw()
 
     def go_next(self):
@@ -514,47 +545,5 @@ class Window(object):
             self.axes_diff.yaxis.set_visible(False)
             self.axes_diff = None
             self.draw()
-
-
-##################################### START ###################################
-if __name__ == "__main__":
-    cmdparser = ap.ArgumentParser(version=__version__,
-                                description=DESC,
-                                epilog=KEYSTROKES,
-                                formatter_class=ap.RawDescriptionHelpFormatter)
-    cmdparser.add_argument("spefilename", help="Binary SPE file to be opened")
-    args = cmdparser.parse_args()
-
-    fullname = args.spefilename
-    if not os.path.exists(fullname):
-        print "{0}\nFILE NOT FOUND:\n{1}\n{0}\n".format("-" * len(fullname),
-                                                        fullname)
-        cmdparser.print_help()
-        sys.exit(1)
-
-    # Detect the working directory: it contains data file given as argv[1]
-    fname = os.path.basename(fullname)
-    if fullname.find("/") >= 0:
-        os.chdir(os.path.dirname(fullname))
-
-    # Check if a config file is available and create it if necessary
-    if os.path.exists(".speview.conf"):
-        config = cp.SafeConfigParser()
-        config.read(".speview.conf")
-        Window(config, fname)
-    else:
-        reply = pz.Question("Should I just show the SPE file?\n" +
-                            "If you answer 'No', then I will\n" +
-                            "create a config with the standard\n" +
-                            "settings for this folder\n")
-        config = cp.RawConfigParser()
-        config.add_section("general")
-        config.add_section("wavenum_calibration")
-        config.set("general", "wavenum_calibration", "no")
-        config.set("general", "use_dark", "no")
-        if not reply:
-            quiz(config, fname)
-        else:
-            Window(config, fname)
 
 

@@ -1,0 +1,2 @@
+speview/_version.py export-subst
+src/speview/_version.py export-subst
