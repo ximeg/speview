@@ -29,6 +29,13 @@ setup(
         "scipy>=0.11.0",
         "xcal-raman>=0.1.5",
         "PyZenity>=0.1.4"
-        ]
+        ],
+    classifiers=[
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Development Status :: 4 - Beta",
+        "Topic :: Multimedia :: Graphics :: Viewers",
+        "Topic :: Scientific/Engineering :: Information Analysis"
+    ]
 )
 
