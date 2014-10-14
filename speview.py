@@ -402,14 +402,16 @@ class Window(object):
         if event.key == "I":
             pz.InfoMessage(self.reader.read_info(self.spelist[0]))
         if event.key == "f5":
-            ans = None
-            while not ans:
-                content = [(fmt, desc) for fmt, desc in
-                           self.canvas.get_supported_filetypes().iteritems()]
-                ans = pz.List(("Formats", "Descr"),
-                              data=content, title="Select format for figures")
-            print "Selected format for images: '{}'".format(ans[0])
-            m.rcParams['savefig.format'] = ans[0]
+            content = [(fmt, desc) for fmt, desc in
+                       self.canvas.get_supported_filetypes().iteritems()]
+            ans = pz.List(("Formats", "Descr"),
+                          data=content, title="Select format for figures")
+            if ans:
+                print "Selected format for images: '{}'".format(ans[0])
+                m.rcParams['savefig.format'] = ans[0]
+            else:
+                print "Canceled by user. Current format is '{}'".format(m.rcParams['savefig.format'])
+
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
