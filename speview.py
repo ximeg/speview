@@ -396,9 +396,11 @@ class Window(object):
                 self.help.set_visible(False)
                 self.help = False
             self.draw()
-        if event.key == "i" or event.key == "I":
+        if event.key == "i":
             self.show_info = not self.show_info
             self.draw()
+        if event.key == "I":
+            pz.InfoMessage(self.reader.read_info(self.spelist[0]))
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
