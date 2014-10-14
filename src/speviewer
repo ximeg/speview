@@ -7,7 +7,6 @@
  date:    Sep.-Oct. 2014
 """
 
-from speview import __version__
 from speview.viewer import *
 
 ##################################### START ###################################
@@ -26,8 +25,15 @@ if __name__ == "__main__":
         cmdparser.print_help()
         sys.exit(1)
 
-    # Detect the working directory: it contains data file given as argv[1]
+    # Check if the argument is a normal file
+    if not os.path.isfile(fullname):
+        print "{0}\nNOT A REGULAR FILE:\n{1}" + \
+              "\n{0}\n".format("-" * len(fullname), fullname)
+        cmdparser.print_help()
+        sys.exit(1)
+
     fname = os.path.basename(fullname)
+    # Detect the working directory: it contains data file given as argv[1]
     if fullname.find("/") >= 0:
         os.chdir(os.path.dirname(fullname))
 
