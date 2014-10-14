@@ -333,13 +333,13 @@ class DataSet(object):
                 keys.append(key)
         return keys
 
-    def plot(self):
+    def plot(self, axes):
         """ Draw the data stored in DataSet on the current axes. """
         for key in self.data:
             if self.data[key].shape:
-                pl.plot(self.data[key].xvals,
-                        self.data[key].yvals,
-                        self.data[key].color, lw=1.0, label=mklbl(key))
+                axes.plot(self.data[key].xvals,
+                          self.data[key].yvals,
+                          self.data[key].color, lw=1.0, label=mklbl(key))
 
 
 class Window(object):
@@ -420,7 +420,7 @@ class Window(object):
         self.axes.cla()
         pl.sca(self.axes)
         # Plot stored data
-        self.dataset.plot()
+        self.dataset.plot(self.axes)
         filename = self.spelist[0]
 
         # Plot current spectrum
