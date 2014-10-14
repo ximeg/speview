@@ -20,12 +20,10 @@ import os
 import sys
 import ConfigParser as cp
 import argparse as ap
-from version import __version__
 
+__version__ = "test"
 
 ########################### Texts and constants ###############################
-
-
 DESC = \
 """
 short description

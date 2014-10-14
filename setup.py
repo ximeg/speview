@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup
-from version import __version__
+from setuptools import setup, find_packages
+
+import versioneer
+
+versioneer.VCS = 'git'
+versioneer.versionfile_source = 'speview/_version.py'
+versioneer.tag_prefix = '' # tags are like 1.2.0
+versioneer.parentdir_prefix = 'speview-' # dirname like 'myproject-1.2.0'
 
 setup(
     name='speview',
-    version=__version__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
-    scripts=['speview.py', "version.py"],
+    packages=find_packages(),
+    scripts=['speview/speview.py'],
     url='https://github.com/ximeg/speview',
     license='LICENSE.txt',
     description='Program to display binary SPE files containing Raman spectra',
