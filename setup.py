@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 import versioneer
 
@@ -16,8 +16,9 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     author='Roman Kiselev',
     author_email='roman.kiselew@gmail.com',
-    packages=find_packages(),
-    scripts=['src/speview.py'],
+    packages=["speview"],
+    package_dir={"speview": "src/speview"},
+    scripts=['src/speviewer'],
     url='https://github.com/ximeg/speview',
     license='LICENSE.txt',
     description='Program to display binary SPE files containing Raman spectra',

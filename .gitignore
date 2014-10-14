@@ -1,3 +1,4 @@
 speview.egg-info
 dist
-version.pyc
+build
+versioneer.pyc

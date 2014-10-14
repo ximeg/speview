@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
  simple SPE file viewer (Raman spectra)
  license: GNU GPL

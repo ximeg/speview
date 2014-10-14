@@ -3,3 +3,4 @@ recursive-include testdata *.SPE
 prune examples/sample?/build
 include versioneer.py
 include speview/_version.py
+include src/speview/_version.py
