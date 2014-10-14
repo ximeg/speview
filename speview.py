@@ -238,6 +238,11 @@ class FileReader(object):
 
         return self.cal_f(spec.wavelen), spec.lum
 
+    def read_info(self, filename):
+        """ Read acquisition information and comments from the file. """
+        spec = winspec.Spectrum(filename)
+        return spec.fileinfo
+
     def read_other_data_format(self, filename):
         """ TODO Use data from some other file. """
         print self.calibrated
@@ -349,13 +354,20 @@ class Window(object):
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure()
         self.axes = self.figure.gca()
+
         self.axes_diff = None
         self.diffdata = None
         self.visible = True
         self.help = False
+        self.grid = True
+        self.show_info = False
+        self.boxprops = {"facecolor": "wheat",
+                       "alpha": 0.9,
+                       "edgecolor": "black",
+                       "boxstyle": "round, pad=1"}
+
         self.canvas = self.figure.canvas
         self.canvas.mpl_connect("key_press_event", self.key_event)
-        self.grid = True
         self.draw()
         pl.show()
 
@@ -383,6 +395,9 @@ class Window(object):
             else:
                 self.help.set_visible(False)
                 self.help = False
+            self.draw()
+        if event.key == "i" or event.key == "I":
+            self.show_info = not self.show_info
             self.draw()
 
     def draw(self):
@@ -454,13 +469,18 @@ class Window(object):
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
 
+        # Display program help
         if self.help is True:
             self.help = \
               self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
                                ha="left", va="center", family="monospace",
-                               bbox={"facecolor": "wheat", "alpha": 0.9,
-                                     "edgecolor": "black",
-                                     "boxstyle": "round, pad=1"})
+                               bbox=self.boxprops)
+
+        # Display the file-related information
+        if self.show_info is True:
+            self.axes.text(x.min(), 0.0, self.reader.read_info(filename),
+                               fontsize="medium", ha="left", va="bottom",
+                               family="monospace", bbox=self.boxprops)
         self.canvas.draw()
 
     def go_next(self):
