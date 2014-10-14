@@ -8,6 +8,7 @@
 """
 
 from speview.viewer import *
+from speview import __version__
 
 ##################################### START ###################################
 if __name__ == "__main__":
@@ -27,8 +28,9 @@ if __name__ == "__main__":
 
     # Check if the argument is a normal file
     if not os.path.isfile(fullname):
-        print "{0}\nNOT A REGULAR FILE:\n{1}" + \
-              "\n{0}\n".format("-" * len(fullname), fullname)
+        print \
+          "{0}\nNOT A REGULAR FILE:\n{1}\n{0}\n".format("-" * len(fullname),
+                                                                     fullname)
         cmdparser.print_help()
         sys.exit(1)
 
