@@ -51,10 +51,9 @@ create a plot and displays it with the default backend, e.g.
 `qt4agg`. A window with a plot will pop up.
 
 ### Installation
-You should be able to install the package with the following two commands:
+You should be able to install the package with just one command:
 ```
-pip install pyzenity --allow-unverified pyzenity
-pip install speview
+pip install pyzenity speview --allow-unverified pyzenity
 ```
 PyZenity is not stored on _PyPi_ and therefore is considered by `pip` as
 potentially dangerous package. For this reason you have to install it manually
@@ -81,13 +80,19 @@ http://matplotlib.org/users/customizing.html
 
 You may wish to use a `qt4agg` backend, which requires `PySide`. If you install
 `PySide` with `pip`, make sure that you have tools `cmake` and `qmake`. The last
-one is typically found in something like `libqt4-dev`.
+one is typically found in something like `libqt4-dev`. Command for installation
+of `PySide`:
+```
+pip install pyside
+```
 
 ##### Fixing Pylab
 Problem happens because for some reason the post-installation script
-"`pyside_postinstall.py`" did not run. Fix it by executing:
+"`pyside_postinstall.py`" did not run. I faced this problem only
+when working with virtual environment. Fix it by executing the following
+command in your virtual environment (e.g. `python ~/.virtualenvs/<env>`):
 ```
-python ~/.virtualenvs/<your_virtualenv>/bin/pyside_postinstall.py -install
+bin/pyside_postinstall.py -install
 ```
 
 #### Description of requirements
