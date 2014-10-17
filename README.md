@@ -56,8 +56,7 @@ You should be able to install the package with just one command:
 pip install speview --allow-unverified pyzenity
 ```
 PyZenity is not stored on _PyPi_ and therefore is considered by `pip` as
-potentially dangerous package. For this reason you have to install it manually
-with a separate command.
+potentially dangerous package. For this reason you have to allow it explicitly.
 
 #### Troubleshooting
 Please note, that you may encounter two troubles:
