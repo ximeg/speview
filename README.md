@@ -53,7 +53,7 @@ create a plot and displays it with the default backend, e.g.
 ### Installation
 You should be able to install the package with just one command:
 ```
-pip install pyzenity speview --allow-unverified pyzenity
+pip install speview --allow-unverified pyzenity
 ```
 PyZenity is not stored on _PyPi_ and therefore is considered by `pip` as
 potentially dangerous package. For this reason you have to install it manually
