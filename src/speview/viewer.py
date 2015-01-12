@@ -340,7 +340,13 @@ class DataSet(object):
                           self.data[key].color, lw=1.0, label=mklbl(key))
 
 
-class Window(object):
+
+
+
+
+
+
+class Window_spe(object):
     """ A matplotlib figure used to display plots """
     def __init__(self, cfg, filename):
         self.spelist = make_spelist(cfg, filename)
@@ -547,3 +553,212 @@ class Window(object):
             self.draw()
 
 
+
+
+
+
+
+
+class Window_mapx(object):
+        """ A matplotlib figure used to display plots """
+    def __init__(self, filename):
+        # Create a data container and a file reader instance
+        import h5py
+        self.h5file = h5py.File(filename)
+        self.regions = self.h5file["Regions"].keys()
+        self.region = self.regions[0]
+
+        self.dset = self.h5file["Regions"][self.region]["Dataset"]
+
+        # Data pointer
+        self.x = 0
+        self.y = 0
+
+        # Create a figure and show it (start the event loop)
+        self.figure = pl.figure(figsize=(15,6))
+
+        self.axes = pl.subplot(121)
+        self.ax_img = pl.subplot(122)
+
+        self.axes_diff = None
+        self.diffdata = None
+        self.visible = True
+        self.help = False
+        self.grid = True
+        self.show_info = False
+        self.boxprops = {"facecolor": "wheat",
+                       "alpha": 0.9,
+                       "edgecolor": "black",
+                       "boxstyle": "round, pad=1"}
+
+        self.canvas = self.figure.canvas
+        self.canvas.mpl_connect("key_press_event", self.key_event)
+        self.draw()
+        pl.show()
+
+    def go_right(idx):
+        """ Move pointer to the right """
+        self.x += idx
+        if self.x >= dset.shape[0]:
+            self.x = 0
+
+    def go_down(idx):
+        """ Move pointer to the right """
+        self.y += idx
+        if self.y >= dset.shape[1]:
+            self.y = 0
+
+    def key_event(self, event):
+        """ Check which key was pressed and call the corresp. function. """
+        if event.key == "right":
+            self.go_right(1)
+        if event.key == "left":
+            self.go_right(-1)
+        if event.key == "up":
+            self.go_down(-1)
+        if event.key == "down":
+            self.go_down(1)
+
+    def draw(self):
+        """ Redraw the plot. First draw stored data, then the current file. """
+        # Clear everything
+        self.axes.cla()
+        self.ax_img.cla()
+
+        # Plot grid
+        pl.sca(self.ax_img)
+        cx = self.dset.shape[0]
+        cy = self.dset.shape[1]
+        CX, CY = meshgrid(cx, cy)
+        scatter(CX, CY, "b+")
+        
+
+        pl.sca(self.axes)
+        # Plot stored data
+        self.dataset.plot(self.axes)
+        filename = self.spelist[0]
+
+        # Plot current spectrum
+        x, y = self.reader.read_spe(filename)
+        if self.visible:
+            self.axes.plot(x, y, line_colors.default, lw=1.25,
+                           label=mklbl(filename))
+
+        # Plot difference (if any)
+        if self.diffdata and self.axes_diff:
+            y, label = self.diffdata
+            self.axes_diff.plot(x, y, line_colors.diff, linestyle="-",
+                                lw=0.8, label=label, alpha=0.7)
+            legend_diff = self.axes_diff.legend(loc="center right",
+                                                fontsize="small",
+                                                fancybox=True,
+                                                frameon=True, framealpha=0.6)
+            legend_diff.draggable(True)
+            legend_diff.set_title("Difference")
+            self.axes_diff.set_ylabel("Difference in counts",
+                                      color=line_colors.diff)
+            self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff,
+                                  linestyles="--", lw=.75, alpha=.5)
+            for tl in self.axes_diff.get_yticklabels():
+                tl.set_color(line_colors.diff)
+        pl.sca(self.axes)
+
+        # change figure title and plot params
+        self.canvas.set_window_title(filename)
+
+        # Formatting - zero level, limits of axes
+        self.axes.set_xlim(min(x), max(x))
+        pl.margins(0.0, 0.05)  # 5% vertical margins
+        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
+        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
+
+        # Formatting - labels and title
+        pl.ylabel("Counts")
+        pl.title(filename)
+        if self.reader.calibrated:
+            pl.xlabel("Wavenumber, cm$^{-1}$")
+        else:
+            pl.xlabel("pixel number")
+
+        # Formatting - legend
+        if self.visible or len(self.dataset.get_lines()):
+            pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.7, alpha=.5)
+            legend = pl.legend(loc="upper right", fontsize="small",
+                               fancybox=True, frameon=True, framealpha=0.6)
+            legend.draggable(True)
+            if len(legend.get_texts()) > 1:
+                legend.set_title("Opened files")
+            else:
+                legend.set_title("Opened file")
+            self.axes.yaxis.set_visible(True)
+        else:
+            self.axes.yaxis.set_visible(False)
+
+        if self.grid:
+            self.axes.grid(self.grid, which='major', axis='both')
+
+        # Display program help
+        if self.help is True:
+            self.help = \
+              self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
+                               ha="left", va="center", family="monospace",
+                               bbox=self.boxprops)
+
+        # Display the file-related information
+        if self.show_info is True:
+            self.axes.text(x.min(), 0.0, self.reader.read_info(filename),
+                               fontsize="medium", ha="left", va="bottom",
+                               family="monospace", bbox=self.boxprops)
+        self.canvas.draw()
+
+    def go_next(self):
+        """ Open next SPE file (NOT calibration or dark, see config). """
+        self.spelist.append(self.spelist.pop(0))  # rotate circle forward
+        self.visible = True
+        self.draw()
+
+    def go_prev(self):
+        """ Display previous SPE file. """
+        self.spelist.insert(0, self.spelist.pop(-1))  # rotate circle backward
+        self.visible = True
+        self.draw()
+
+    def toggle(self):
+        """ Toggle the state of the active line (saved or not). """
+        filename = self.spelist[0]
+        if self.dataset[filename].shape:
+            self.dataset.remove(self.spelist[0])
+        else:
+            self.dataset[filename] = self.reader.read_spe(filename)
+        self.draw()
+
+    def diff(self):
+        """ Subtract one spectrum from another one and plot the difference. """
+        filename = self.spelist[0]
+        keys = self.dataset.get_lines()
+        if filename in keys:
+            keys.remove(filename)
+        if len(keys):
+            if not self.axes_diff:
+                self.axes_diff = self.axes.twinx()
+            if len(keys) == 1:  # No choice - subtract it!
+                item = self.dataset[keys[0]]
+            else:  # Ask user which line he wants to subtract
+                ans = None
+                while not ans:
+                    ans = pz.List(("Saved spectra",), data=[keys],
+                          title="Select line to subtract")
+                item = self.dataset[ans[0]]
+            xcurr, ycurr = self.reader.read_spe(filename)
+            self.diffdata = (ycurr - item.yvals,
+                             mklbl(filename) + "\n" +
+                             mklbl(item.filename))
+            self.draw()
+
+    def diff_off(self):
+        """ Get rid of difference line and axes """
+        if self.axes_diff:
+            self.axes_diff.cla()
+            self.axes_diff.yaxis.set_visible(False)
+            self.axes_diff = None
+            self.draw()
