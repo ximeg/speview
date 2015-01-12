@@ -580,10 +580,11 @@ class Window_mapx(object):
         self.wn = np.linspace(50, 3400, self.dset.shape[2])
 
         # Create a figure and show it (start the event loop)
-        self.figure = pl.figure(figsize=(15,6))
+        self.figure = pl.figure()
+        self.axes = pl.gca()
 
-        self.axes = pl.subplot(121)
-        self.ax_img = pl.subplot(122)
+        self.figure_nav = pl.figure()
+        self.ax_img = pl.gca()
 
         self.axes_diff = None
         self.diffdata = None
@@ -597,7 +598,8 @@ class Window_mapx(object):
                        "boxstyle": "round, pad=1"}
 
         self.canvas = self.figure.canvas
-        self.canvas.mpl_connect("key_press_event", self.key_event)
+        self.canvas_nav = self.figure_nav.canvas
+        self.canvas_nav.mpl_connect("key_press_event", self.key_event)
         self.draw()
         pl.show()
 
@@ -718,6 +720,7 @@ class Window_mapx(object):
                                    fontsize="medium", ha="left", va="bottom",
                                    family="monospace", bbox=self.boxprops)
         self.canvas.draw()
+        self.canvas_nav.draw()
 
     def go_next(self):
         """ Open next SPE file (NOT calibration or dark, see config). """
