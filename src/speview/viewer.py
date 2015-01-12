@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
  simple SPE file viewer (Raman spectra) - file with definitions
  license: GNU GPL
@@ -600,17 +601,21 @@ class Window_mapx(object):
         self.draw()
         pl.show()
 
-    def go_right(idx):
+    def go_right(self, idx):
         """ Move pointer to the right """
         self.x += idx
         if self.x >= self.dset.shape[0]:
             self.x = 0
+        if self.x < 0:
+            self.x = self.dset.shape[0] - 1
 
-    def go_down(idx):
+    def go_down(self, idx):
         """ Move pointer to the right """
         self.y += idx
-        if self.y >= dset.shape[1]:
+        if self.y >= self.dset.shape[1]:
             self.y = 0
+        if self.y < 0:
+            self.y = self.dset.shape[1] - 1
 
     def key_event(self, event):
         """ Check which key was pressed and call the corresp. function. """
@@ -619,9 +624,10 @@ class Window_mapx(object):
         if event.key == "left":
             self.go_right(-1)
         if event.key == "up":
-            self.go_down(-1)
-        if event.key == "down":
             self.go_down(1)
+        if event.key == "down":
+            self.go_down(-1)
+        self.draw()
 
     def draw(self):
         """ Redraw the plot. First draw stored data, then the current file. """
@@ -631,10 +637,10 @@ class Window_mapx(object):
 
         # Plot grid
         pl.sca(self.ax_img)
-        cx = self.dset.shape[0]
-        cy = self.dset.shape[1]
+        cx = range(self.dset.shape[0])
+        cy = range(self.dset.shape[1])
         CX, CY = np.meshgrid(cx, cy)
-        pl.scatter(CX, CY, "b+")
+        pl.plot(CX, CY, "b,")
         pl.plot(self.x, self.y, "r.")
 
         pl.sca(self.axes)
