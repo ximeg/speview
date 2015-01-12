@@ -49,7 +49,7 @@ if __name__ == "__main__":
         if os.path.exists(".speview.conf"):
             config = cp.SafeConfigParser()
             config.read(".speview.conf")
-            Window(config, fname)
+            Window_spe(config, fname)
         else:
             reply = pz.Question("Should I just show the SPE file?\n" +
                                 "If you answer 'No', then I will\n" +

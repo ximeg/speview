@@ -560,10 +560,11 @@ class Window_spe(object):
 
 
 class Window_mapx(object):
-        """ A matplotlib figure used to display plots """
+    """ A matplotlib figure used to display plots """
     def __init__(self, filename):
         # Create a data container and a file reader instance
         import h5py
+        self.filename = filename
         self.h5file = h5py.File(filename)
         self.regions = self.h5file["Regions"].keys()
         self.region = self.regions[0]
@@ -573,6 +574,9 @@ class Window_mapx(object):
         # Data pointer
         self.x = 0
         self.y = 0
+
+        # FIXME - wavenumber axis
+        self.wn = np.linspace(50, 3400, self.dset.shape[2])
 
         # Create a figure and show it (start the event loop)
         self.figure = pl.figure(figsize=(15,6))
@@ -599,7 +603,7 @@ class Window_mapx(object):
     def go_right(idx):
         """ Move pointer to the right """
         self.x += idx
-        if self.x >= dset.shape[0]:
+        if self.x >= self.dset.shape[0]:
             self.x = 0
 
     def go_down(idx):
@@ -629,86 +633,84 @@ class Window_mapx(object):
         pl.sca(self.ax_img)
         cx = self.dset.shape[0]
         cy = self.dset.shape[1]
-        CX, CY = meshgrid(cx, cy)
-        scatter(CX, CY, "b+")
-        
+        CX, CY = np.meshgrid(cx, cy)
+        pl.scatter(CX, CY, "b+")
+        pl.plot(self.x, self.y, "r.")
 
         pl.sca(self.axes)
-        # Plot stored data
-        self.dataset.plot(self.axes)
-        filename = self.spelist[0]
-
         # Plot current spectrum
-        x, y = self.reader.read_spe(filename)
-        if self.visible:
-            self.axes.plot(x, y, line_colors.default, lw=1.25,
-                           label=mklbl(filename))
 
-        # Plot difference (if any)
-        if self.diffdata and self.axes_diff:
-            y, label = self.diffdata
-            self.axes_diff.plot(x, y, line_colors.diff, linestyle="-",
-                                lw=0.8, label=label, alpha=0.7)
-            legend_diff = self.axes_diff.legend(loc="center right",
-                                                fontsize="small",
-                                                fancybox=True,
-                                                frameon=True, framealpha=0.6)
-            legend_diff.draggable(True)
-            legend_diff.set_title("Difference")
-            self.axes_diff.set_ylabel("Difference in counts",
-                                      color=line_colors.diff)
-            self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff,
-                                  linestyles="--", lw=.75, alpha=.5)
-            for tl in self.axes_diff.get_yticklabels():
-                tl.set_color(line_colors.diff)
-        pl.sca(self.axes)
+        if self.visible:
+            self.axes.plot(self.wn, self.dset[self.x, self.y, :])
+#            self.axes.plot(x, y, line_colors.default, lw=1.25,
+#                           label=mklbl(filename))
 
         # change figure title and plot params
-        self.canvas.set_window_title(filename)
+        self.canvas.set_window_title(self.filename)
 
-        # Formatting - zero level, limits of axes
-        self.axes.set_xlim(min(x), max(x))
-        pl.margins(0.0, 0.05)  # 5% vertical margins
-        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
-        self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
+        if False:
+            # Plot difference (if any)
+            if self.diffdata and self.axes_diff:
+                y, label = self.diffdata
+                self.axes_diff.plot(x, y, line_colors.diff, linestyle="-",
+                                    lw=0.8, label=label, alpha=0.7)
+                legend_diff = self.axes_diff.legend(loc="center right",
+                                                    fontsize="small",
+                                                    fancybox=True,
+                                                    frameon=True, framealpha=0.6)
+                legend_diff.draggable(True)
+                legend_diff.set_title("Difference")
+                self.axes_diff.set_ylabel("Difference in counts",
+                                          color=line_colors.diff)
+                self.axes_diff.hlines(0, min(x), max(x), color=line_colors.diff,
+                                      linestyles="--", lw=.75, alpha=.5)
+                for tl in self.axes_diff.get_yticklabels():
+                    tl.set_color(line_colors.diff)
+            pl.sca(self.axes)
+
+
+            # Formatting - zero level, limits of axes
+            self.axes.set_xlim(min(x), max(x))
+            pl.margins(0.0, 0.05)  # 5% vertical margins
+            self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
+            self.axes.yaxis.get_major_formatter().set_powerlimits((0, 4))
 
         # Formatting - labels and title
         pl.ylabel("Counts")
-        pl.title(filename)
-        if self.reader.calibrated:
-            pl.xlabel("Wavenumber, cm$^{-1}$")
-        else:
-            pl.xlabel("pixel number")
+        pl.title(self.filename)
+        pl.xlabel("Wavenumber, cm$^{-1}$")
 
-        # Formatting - legend
-        if self.visible or len(self.dataset.get_lines()):
-            pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.7, alpha=.5)
-            legend = pl.legend(loc="upper right", fontsize="small",
-                               fancybox=True, frameon=True, framealpha=0.6)
-            legend.draggable(True)
-            if len(legend.get_texts()) > 1:
-                legend.set_title("Opened files")
+        if False:
+            # Formatting - legend
+            if self.visible or len(self.dataset.get_lines()):
+                pl.hlines(0, min(x), max(x), "k", linestyles="--", lw=.7, alpha=.5)
+                legend = pl.legend(loc="upper right", fontsize="small",
+                                   fancybox=True, frameon=True, framealpha=0.6)
+                legend.draggable(True)
+                if len(legend.get_texts()) > 1:
+                    legend.set_title("Opened files")
+                else:
+                    legend.set_title("Opened file")
+                self.axes.yaxis.set_visible(True)
             else:
-                legend.set_title("Opened file")
-            self.axes.yaxis.set_visible(True)
-        else:
-            self.axes.yaxis.set_visible(False)
+                self.axes.yaxis.set_visible(False)
 
         if self.grid:
             self.axes.grid(self.grid, which='major', axis='both')
 
-        # Display program help
-        if self.help is True:
-            self.help = \
-              self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
-                               ha="left", va="center", family="monospace",
-                               bbox=self.boxprops)
+        if False:
+            # Display program help
+            if self.help is True:
+                self.help = \
+                  self.figure.text(0.05, 0.5, KEYSTROKES, fontsize="medium",
+                                   ha="left", va="center", family="monospace",
+                                   bbox=self.boxprops)
 
-        # Display the file-related information
-        if self.show_info is True:
-            self.axes.text(x.min(), 0.0, self.reader.read_info(filename),
-                               fontsize="medium", ha="left", va="bottom",
-                               family="monospace", bbox=self.boxprops)
+            # Display the file-related information
+            if self.show_info is True:
+                self.axes.text(x.min(), 0.0, self.reader.read_info(filename),
+                                   fontsize="medium", ha="left", va="bottom",
+                                   family="monospace", bbox=self.boxprops)
         self.canvas.draw()
 
     def go_next(self):
